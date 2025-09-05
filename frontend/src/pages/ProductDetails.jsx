@@ -10,7 +10,7 @@ import {
   useWishlistContext,
 } from "../contexts";
 import { getProductByIdService } from "../api/apiServices";
-import { StarRating } from "../components";
+import { StarRating, ReviewList } from "../components";
 import { notify } from "../utils/utils";
 
 const ProductDetails = () => {
@@ -25,6 +25,7 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
   const product = getProductById(productId);
 
   useEffect(() => {
@@ -40,6 +41,20 @@ const ProductDetails = () => {
     })();
   }, [allProducts]);
 
+  // Show loading state if product is not loaded yet
+  if (loading || !product) {
+    return (
+      <div className="md:min-h-[80vh] flex justify-center items-center pt-5 sm:pt-3 pb-2 relative">
+        <div className="animate-pulse">
+          <div className="grid grid-rows-1 sm:grid-cols-2 gap-2 sm:gap-10">
+            <div className="p-6 bg-gray-200 rounded-lg min-h-[400px]"></div>
+            <div className="p-6 bg-gray-200 rounded-lg min-h-[400px]"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="md:min-h-[80vh] flex justify-center items-center pt-5 sm:pt-3 pb-2 relative">
       <main className="grid grid-rows-1 sm:grid-cols-2 gap-2 sm:gap-10 ">
@@ -50,7 +65,7 @@ const ProductDetails = () => {
                <div className="relative flex items-center justify-center flex-1 w-full">
                  <img
                    src={product.images[selectedImageIndex]}
-                   alt={product.name}
+                   alt={product.name || "Product image"}
                    className="w-4/5 h-4/5 sm:w-3/4 sm:h-3/4 md:w-2/3 md:h-2/3 lg:w-3/5 lg:h-3/5 object-contain transition-all duration-300 ease-in-out cursor-pointer hover:scale-105"
                    onClick={() => setIsFullscreen(true)}
                  />
@@ -108,7 +123,7 @@ const ProductDetails = () => {
                      >
                        <img
                          src={image}
-                         alt={`${product.name} ${index + 1}`}
+                         alt={`${product.name || "Product"} ${index + 1}`}
                          className="w-full h-full object-cover cursor-pointer"
                          loading="lazy"
                          onClick={() => {
@@ -123,8 +138,8 @@ const ProductDetails = () => {
             </div>
           ) : (
                          <div className="flex items-center justify-center flex-1 w-full">
-               <img
-                 src={product?.image}
+          <img
+            src={product?.image}
                  alt={product.name || "Product image"}
                  className="w-4/5 h-4/5 sm:w-3/4 sm:h-3/4 md:w-2/3 md:h-2/3 lg:w-3/5 lg:h-3/5 object-contain cursor-pointer hover:scale-105 transition-all duration-200"
                  onClick={() => setIsFullscreen(true)}
@@ -209,9 +224,9 @@ const ProductDetails = () => {
                      {product?.quantity > 0 ? `${product.quantity} available` : 'Out of stock'}
                    </span>
                  </div>
-               </div>
-             </div>
-                      </div>
+              </div>
+              </div>
+          </div>
 
            {/* Features Section */}
            {product?.features && product.features.length > 0 && (
@@ -264,12 +279,12 @@ const ProductDetails = () => {
              <div className="flex items-center gap-3">
                <span className="text-2xl sm:text-3xl font-bold text-amber-600">
                  ₹{product?.newPrice || product?.price}
-               </span>
+            </span>
                {product?.newPrice && product?.newPrice < product?.price && (
                  <>
                    <span className="text-lg text-gray-500 line-through">
-                     ₹{product?.price}
-                   </span>
+              ₹{product?.price}
+            </span>
                    <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-semibold">
                      Save ₹{product?.price - product?.newPrice}
                    </span>
@@ -286,7 +301,7 @@ const ProductDetails = () => {
                  </span>
                </div>
              )}
-           </div>
+          </div>
 
           <div className={`w-full   flex gap-4 items-center   flex-wrap  `}>
             <button
@@ -337,44 +352,42 @@ const ProductDetails = () => {
                 </>
               )}{" "}
             </button>
-                     </div>
+          </div>
 
-           {/* Reviews Section */}
-           {product?.reviews && product.reviews.length > 0 && (
-             <div className="flex flex-col gap-3">
-               <h2 className="text-lg font-semibold">Customer Reviews</h2>
-               <div className="space-y-3 max-h-48 overflow-y-auto">
-                 {product.reviews.slice(0, 3).map((review, index) => (
-                   <div key={index} className="bg-gray-50 p-3 rounded-lg">
-                     <div className="flex items-center gap-2 mb-2">
-                       <div className="flex text-amber-400">
-                         {[...Array(5)].map((_, i) => (
-                           <svg
-                             key={i}
-                             className={`w-4 h-4 ${i < review.rating ? 'fill-current' : 'fill-gray-300'}`}
-                             viewBox="0 0 20 20"
-                           >
-                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                           </svg>
-                         ))}
-                       </div>
-                       <span className="text-sm text-gray-600">{review.rating}/5</span>
-                     </div>
-                     {review.comment && (
-                       <p className="text-sm text-gray-700">{review.comment}</p>
-                     )}
-                   </div>
-                 ))}
-                 {product.reviews.length > 3 && (
-                   <p className="text-sm text-gray-500 text-center">
-                     +{product.reviews.length - 3} more reviews
-                   </p>
-                 )}
+           {/* Review Summary Section */}
+           <div className="flex flex-col gap-3">
+             <h2 className="text-lg font-semibold">Customer Reviews</h2>
+             
+             <div className="flex items-center space-x-4 mb-4">
+               <div className="flex items-center space-x-2">
+                 <StarRating rating={product?.rating || 0} />
+                 <span className="text-sm text-gray-600">
+                   {product?.rating ? product.rating.toFixed(1) : '0.0'} out of 5
+                 </span>
                </div>
+               {product?.reviewCount > 0 && (
+                 <button
+                   onClick={() => setShowReviewsModal(true)}
+                   className="text-sm text-gray-500 hover:text-blue-600 underline cursor-pointer transition-colors duration-200"
+                 >
+                   {product.reviewCount} review{(product.reviewCount !== 1 ? 's' : '')}
+                 </button>
+               )}
              </div>
-           )}
-         </section>
-       </main>
+             
+             {product?.reviewCount > 0 ? (
+               <p className="text-sm text-gray-600">
+                 Based on {product.reviewCount} customer review{(product.reviewCount !== 1 ? 's' : '')}
+               </p>
+             ) : (
+               <p className="text-sm text-gray-500">
+                 No reviews yet. Be the first to review this product!
+               </p>
+             )}
+           </div>
+        </section>
+      </main>
+
 
        {/* Fullscreen Image Modal */}
        {isFullscreen && product?.images && product.images.length > 0 && (
@@ -463,13 +476,46 @@ const ProductDetails = () => {
                    >
                      <img
                        src={image}
-                       alt={`${product.name} ${index + 1}`}
+                       alt={`${product.name || "Product"} ${index + 1}`}
                        className="w-full h-full object-cover"
                      />
                    </button>
                  ))}
                </div>
              )}
+           </div>
+         </div>
+       )}
+
+       {/* Reviews Modal */}
+       {showReviewsModal && (
+         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+             {/* Modal Header */}
+             <div className="flex items-center justify-between p-6 border-b border-gray-200">
+               <h2 className="text-xl font-semibold text-gray-900">
+                 Customer Reviews for {product?.name}
+               </h2>
+               <button
+                 onClick={() => setShowReviewsModal(false)}
+                 className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+               >
+                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                 </svg>
+               </button>
+             </div>
+             
+             {/* Modal Content */}
+             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+               <ReviewList 
+                 productId={product?._id} 
+                 onReviewUpdate={() => {
+                   // Refresh product data when reviews are updated
+                   window.location.reload();
+                 }}
+               />
+             </div>
            </div>
          </div>
        )}

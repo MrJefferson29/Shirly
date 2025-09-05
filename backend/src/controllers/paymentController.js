@@ -719,6 +719,7 @@ const createCheckoutSession = async (req, res) => {
     console.log('📋 Backend received shipping address:', shippingAddress);
     console.log('📋 Shipping address type:', typeof shippingAddress);
     console.log('📋 Shipping address keys:', shippingAddress ? Object.keys(shippingAddress) : 'undefined');
+    console.log('📋 Shipping address values:', shippingAddress);
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -784,6 +785,12 @@ const createCheckoutSession = async (req, res) => {
       quantity: item.quantity || 1,
     }));
 
+    // Debug: Log what will be stored in metadata
+    console.log('📋 About to store in Stripe metadata:');
+    console.log('📋 - userId:', userId.toString());
+    console.log('📋 - items:', JSON.stringify(items));
+    console.log('📋 - shippingAddress:', JSON.stringify(shippingAddress || {}));
+    
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,

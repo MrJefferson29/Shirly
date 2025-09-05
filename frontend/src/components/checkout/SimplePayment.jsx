@@ -3,7 +3,7 @@ import {
   createCheckoutSessionService,
   getPaymentMethodsService
 } from '../../api/apiServices';
-import { useAuthContext, useCartContext } from '../../contexts';
+import { useAuthContext, useCartContext, useProductsContext } from '../../contexts';
 import { notify } from '../../utils/utils';
 import spinningLoader from '../../assets/spinning-circles.svg';
 import { 
@@ -19,6 +19,14 @@ import {
 const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
   const { token } = useAuthContext();
   const { cart, clearCart, totalPriceOfCartProducts } = useCartContext();
+  const { currentAddress, userAddress, loading } = useProductsContext();
+  
+  // Debug: Log the address values
+  console.log('🔍 SimplePayment render - currentAddress:', currentAddress);
+  console.log('🔍 SimplePayment render - userAddress:', userAddress);
+  console.log('🔍 SimplePayment render - currentAddress keys:', currentAddress ? Object.keys(currentAddress) : 'undefined');
+  console.log('🔍 SimplePayment render - userAddress keys:', userAddress ? Object.keys(userAddress) : 'undefined');
+  console.log('🔍 SimplePayment render - loading:', loading);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
@@ -57,6 +65,38 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
     setError(null);
 
     try {
+      // Check if address is available
+      console.log('🔍 Payment attempt - currentAddress:', currentAddress);
+      console.log('🔍 Payment attempt - currentAddress type:', typeof currentAddress);
+      console.log('🔍 Payment attempt - currentAddress keys:', currentAddress ? Object.keys(currentAddress) : 'undefined');
+      console.log('🔍 Payment attempt - currentAddress length:', currentAddress ? Object.keys(currentAddress).length : 'undefined');
+      
+      // More robust address validation
+      if (!currentAddress || 
+          Object.keys(currentAddress).length === 0 || 
+          !currentAddress.fullname || 
+          !currentAddress.mobile || 
+          !currentAddress.flat || 
+          !currentAddress.city || 
+          !currentAddress.state || 
+          !currentAddress.pincode) {
+        console.log('❌ Address validation failed - no address selected');
+        console.log('❌ Address validation details:', {
+          hasAddress: !!currentAddress,
+          keysLength: currentAddress ? Object.keys(currentAddress).length : 0,
+          hasFullname: currentAddress?.fullname,
+          hasMobile: currentAddress?.mobile,
+          hasFlat: currentAddress?.flat,
+          hasCity: currentAddress?.city,
+          hasState: currentAddress?.state,
+          hasPincode: currentAddress?.pincode
+        });
+        throw new Error('Please add a shipping address before proceeding to payment.');
+      }
+
+      console.log('📋 Current address being sent:', currentAddress);
+      console.log('📋 Current address JSON:', JSON.stringify(currentAddress, null, 2));
+
       // Create checkout session with Stripe
       const response = await createCheckoutSessionService(
         {
@@ -69,6 +109,7 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
           })),
           totalAmount: totalPriceOfCartProducts,
           paymentMethod: selectedPaymentMethod,
+          shippingAddress: currentAddress,
           successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/checkout`
         },
@@ -196,12 +237,36 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
 
 const SimplePayment = ({ onPaymentSuccess, onPaymentError }) => {
   const { cart } = useCartContext();
+  const { loading, addressLoading, currentAddress } = useProductsContext();
 
   if (!cart || cart.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <p className="text-gray-600">Your cart is empty</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state while address is being loaded
+  if (loading || addressLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <img src={spinningLoader} alt="Loading" className="w-8 h-8 mx-auto mb-4" />
+          <p className="text-gray-600">Loading address information...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no address is available
+  if (!currentAddress || !currentAddress.fullname) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-gray-600">Please add a shipping address to proceed with payment.</p>
         </div>
       </div>
     );

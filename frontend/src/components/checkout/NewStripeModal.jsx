@@ -5,12 +5,19 @@ import { notify } from "../../utils/utils";
 import { useNavigate } from "react-router";
 import SimplePayment from "./SimplePayment";
 import OrderSummary from "./OrderSummary";
+import spinningLoader from '../../assets/spinning-circles.svg';
 
 const NewStripeModal = ({ showModal, setShowModal }) => {
   const { userInfo, token } = useAuthContext();
   const { cart, clearCart, totalPriceOfCartProducts } = useCartContext();
-  const { currentAddress } = useProductsContext();
+  const { currentAddress, userAddress, addressLoading } = useProductsContext();
   const navigate = useNavigate();
+  
+  // Debug: Log the address values
+  console.log('🔍 NewStripeModal render - currentAddress:', currentAddress);
+  console.log('🔍 NewStripeModal render - userAddress:', userAddress);
+  console.log('🔍 NewStripeModal render - currentAddress keys:', currentAddress ? Object.keys(currentAddress) : 'undefined');
+  console.log('🔍 NewStripeModal render - userAddress keys:', userAddress ? Object.keys(userAddress) : 'undefined');
 
   const handlePaymentSuccess = (orderData) => {
     notify("success", "Payment successful! Your order has been confirmed.");
@@ -56,7 +63,7 @@ const NewStripeModal = ({ showModal, setShowModal }) => {
               </div>
 
               {/* Address Information */}
-              {currentAddress && Object.keys(currentAddress).length > 0 && (
+              {currentAddress && Object.keys(currentAddress).length > 0 && currentAddress.fullname ? (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Shipping Address</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
@@ -73,9 +80,7 @@ const NewStripeModal = ({ showModal, setShowModal }) => {
                     </div>
                   </div>
                 </div>
-              )}
-
-              {(!currentAddress || Object.keys(currentAddress).length === 0) && (
+              ) : (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-yellow-800 text-sm">
                     ⚠️ Please add a shipping address before proceeding to payment.
@@ -88,7 +93,12 @@ const NewStripeModal = ({ showModal, setShowModal }) => {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Payment</h3>
-                {currentAddress && Object.keys(currentAddress).length > 0 ? (
+                {addressLoading ? (
+                  <div className="bg-gray-100 rounded-lg p-8 text-center">
+                    <img src={spinningLoader} alt="Loading" className="w-8 h-8 mx-auto mb-4" />
+                    <p className="text-gray-600">Loading address information...</p>
+                  </div>
+                ) : currentAddress && Object.keys(currentAddress).length > 0 && currentAddress.fullname ? (
                   <SimplePayment
                     onPaymentSuccess={handlePaymentSuccess}
                     onPaymentError={handlePaymentError}

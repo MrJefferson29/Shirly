@@ -261,25 +261,60 @@ const changePassword = async (req, res) => {
 // @desc    Get user's addresses
 // @route   GET /api/auth/addresses
 // @access  Private
-const getUserAddresses = async (req, res) => {
+const getUserAddress = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('addresses');
+    console.log('🏠 getUserAddress called for user:', req.user._id);
+    const user = await User.findById(req.user._id).select('shippingAddress addresses');
     
     if (!user) {
+      console.log('🏠 User not found:', req.user._id);
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    console.log('🏠 User found:', user.username);
+    console.log('🏠 User shippingAddress:', user.shippingAddress);
+    console.log('🏠 User addresses array:', user.addresses);
+    
+    let shippingAddress = user.shippingAddress || {};
+    
+    // If no shippingAddress but has addresses array, use the default address
+    if (!shippingAddress || Object.keys(shippingAddress).length === 0) {
+      if (user.addresses && user.addresses.length > 0) {
+        const defaultAddress = user.addresses.find(addr => addr.isDefault) || user.addresses[0];
+        if (defaultAddress) {
+          shippingAddress = {
+            fullname: defaultAddress.fullname,
+            mobile: defaultAddress.mobile,
+            flat: defaultAddress.flat,
+            area: defaultAddress.area,
+            city: defaultAddress.city,
+            state: defaultAddress.state,
+            pincode: defaultAddress.pincode
+          };
+          
+          // Update user's shippingAddress field
+          user.shippingAddress = shippingAddress;
+          await user.save();
+          console.log('🏠 Migrated address to shippingAddress field');
+        }
+      }
+    }
+
+    console.log('🏠 Returning shippingAddress:', shippingAddress);
+    console.log('🏠 ShippingAddress keys:', Object.keys(shippingAddress));
+    console.log('🏠 ShippingAddress length:', Object.keys(shippingAddress).length);
+    
     res.status(200).json({
       success: true,
       data: {
-        addresses: user.addresses || []
+        shippingAddress: shippingAddress
       }
     });
   } catch (error) {
-    console.error('Get user addresses error:', error);
+    console.error('Get user address error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -287,71 +322,8 @@ const getUserAddresses = async (req, res) => {
   }
 };
 
-// @desc    Add new address to user
-// @route   POST /api/auth/addresses
-// @access  Private
-const addAddress = async (req, res) => {
-  try {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
-
-    const { fullname, mobile, flat, area, city, state, pincode, isDefault } = req.body;
-
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    // If this is set as default, unset all other default addresses
-    if (isDefault) {
-      user.addresses.forEach(address => {
-        address.isDefault = false;
-      });
-    }
-
-    // If this is the first address, make it default
-    const newAddress = {
-      fullname,
-      mobile,
-      flat,
-      area,
-      city,
-      state,
-      pincode,
-      isDefault: isDefault || user.addresses.length === 0
-    };
-
-    user.addresses.push(newAddress);
-    await user.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Address added successfully',
-      data: {
-        address: user.addresses[user.addresses.length - 1]
-      }
-    });
-  } catch (error) {
-    console.error('Add address error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
-
-// @desc    Update user's address
-// @route   PUT /api/auth/addresses/:addressId
+// @desc    Update user's shipping address
+// @route   PUT /api/auth/address
 // @access  Private
 const updateAddress = async (req, res) => {
   try {
@@ -365,8 +337,7 @@ const updateAddress = async (req, res) => {
       });
     }
 
-    const { addressId } = req.params;
-    const { fullname, mobile, flat, area, city, state, pincode, isDefault } = req.body;
+    const { fullname, mobile, flat, area, city, state, pincode } = req.body;
 
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -376,32 +347,15 @@ const updateAddress = async (req, res) => {
       });
     }
 
-    const addressIndex = user.addresses.findIndex(addr => addr._id.toString() === addressId);
-    if (addressIndex === -1) {
-      return res.status(404).json({
-        success: false,
-        message: 'Address not found'
-      });
-    }
-
-    // If this is set as default, unset all other default addresses
-    if (isDefault) {
-      user.addresses.forEach(address => {
-        address.isDefault = false;
-      });
-    }
-
-    // Update the address
-    user.addresses[addressIndex] = {
-      ...user.addresses[addressIndex],
+    // Update the shipping address
+    user.shippingAddress = {
       fullname,
       mobile,
       flat,
       area,
       city,
       state,
-      pincode,
-      isDefault: isDefault || false
+      pincode
     };
 
     await user.save();
@@ -410,7 +364,7 @@ const updateAddress = async (req, res) => {
       success: true,
       message: 'Address updated successfully',
       data: {
-        address: user.addresses[addressIndex]
+        shippingAddress: user.shippingAddress
       }
     });
   } catch (error) {
@@ -422,51 +376,6 @@ const updateAddress = async (req, res) => {
   }
 };
 
-// @desc    Delete user's address
-// @route   DELETE /api/auth/addresses/:addressId
-// @access  Private
-const deleteAddress = async (req, res) => {
-  try {
-    const { addressId } = req.params;
-
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    const addressIndex = user.addresses.findIndex(addr => addr._id.toString() === addressId);
-    if (addressIndex === -1) {
-      return res.status(404).json({
-        success: false,
-        message: 'Address not found'
-      });
-    }
-
-    const wasDefault = user.addresses[addressIndex].isDefault;
-    user.addresses.splice(addressIndex, 1);
-
-    // If we deleted the default address and there are other addresses, make the first one default
-    if (wasDefault && user.addresses.length > 0) {
-      user.addresses[0].isDefault = true;
-    }
-
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Address deleted successfully'
-    });
-  } catch (error) {
-    console.error('Delete address error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
 
 module.exports = {
   register,
@@ -474,8 +383,6 @@ module.exports = {
   getMe,
   updateProfile,
   changePassword,
-  getUserAddresses,
-  addAddress,
-  updateAddress,
-  deleteAddress
+  getUserAddress,
+  updateAddress
 };

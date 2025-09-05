@@ -1,4 +1,4 @@
-import { Cart, Wishlist, Checkout, Profile, Orders, AdminDashboard, AdminProducts, AdminOrders } from "../pages";
+import { Cart, Wishlist, Checkout, Profile, Orders, AdminDashboard, AdminProducts, AdminOrders, CustomerChat, CustomerOrders } from "../pages";
 
 const privateRoutes = [
   {
@@ -15,11 +15,15 @@ const privateRoutes = [
   },
   {
     path: "/orders",
-    element: <Orders />,
+    element: <CustomerOrders />,
   },
   {
     path: "/profile",
     element: <Profile />,
+  },
+  {
+    path: "/chat",
+    element: <CustomerChat />,
   },
   // Admin routes
   {

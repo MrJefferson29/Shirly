@@ -3,10 +3,8 @@ import { initialState, productsReducer } from "../../reducers/productsReducer";
 import {
   getAllCategoriesService,
   getAllProductsService,
-  getUserAddressesService,
-  addAddressService,
+  getUserAddressService,
   updateAddressService,
-  deleteAddressService,
 } from "../../api/apiServices";
 import {
   actionTypes,
@@ -20,37 +18,46 @@ export const ProductsContext = createContext();
 const ProductsContextProvider = ({ children }) => {
   const { token } = useAuthContext();
   const [loading, setLoading] = useState(false);
+  const [addressLoading, setAddressLoading] = useState(false);
 
   const [state, dispatch] = useReducer(productsReducer, initialState);
-  const [currentAddress, setCurrentAddress] = useState({});
-  const [userAddresses, setUserAddresses] = useState([]);
+  const [userAddress, setUserAddress] = useState({});
   const [isOrderPlaced, setisOrderPlaced] = useState(false);
 
-  // Load user's addresses from backend
+  // Load user's address from backend
   useEffect(() => {
-    const loadUserAddresses = async () => {
+    const loadUserAddress = async () => {
       if (token) {
+        setAddressLoading(true);
         try {
-          const response = await getUserAddressesService(token);
-          if (response.data.success && response.data.data.addresses) {
-            const addresses = response.data.data.addresses;
-            setUserAddresses(addresses);
-            
-            // Set the default address as current address
-            const defaultAddress = addresses.find(addr => addr.isDefault);
-            if (defaultAddress) {
-              setCurrentAddress(defaultAddress);
-            } else if (addresses.length > 0) {
-              setCurrentAddress(addresses[0]);
-            }
+          console.log('🏠 Loading user address...');
+          const response = await getUserAddressService(token);
+          console.log('🏠 Full address response:', response);
+          console.log('🏠 Address response data:', response.data);
+          console.log('🏠 Address response success:', response.data.success);
+          console.log('🏠 Address response data.shippingAddress:', response.data.data?.shippingAddress);
+          
+          if (response.data.success && response.data.data?.shippingAddress) {
+            const address = response.data.data.shippingAddress;
+            console.log('🏠 Setting user address:', address);
+            console.log('🏠 Address keys:', Object.keys(address));
+            console.log('🏠 Address values:', Object.values(address));
+            setUserAddress(address);
+          } else {
+            console.log('🏠 No address found in response');
+            console.log('🏠 Response success:', response.data.success);
+            console.log('🏠 Response data:', response.data.data);
           }
         } catch (error) {
-          console.log('No addresses found or error loading addresses:', error);
+          console.log('🏠 Error loading address:', error);
+          console.log('🏠 Error details:', error.response?.data);
+        } finally {
+          setAddressLoading(false);
         }
       }
     };
 
-    loadUserAddresses();
+    loadUserAddress();
   }, [token]);
 
   useEffect(() => {
@@ -119,54 +126,14 @@ const ProductsContextProvider = ({ children }) => {
     (product) => product.trending
   );
 
-  const addAddress = async (newAddress) => {
-    try {
-      if (token) {
-        const response = await addAddressService(newAddress, token);
-        if (response.data.success) {
-          const addedAddress = response.data.data.address;
-          setUserAddresses(prev => [...prev, addedAddress]);
-          
-          // If this is the first address or marked as default, set it as current
-          if (addedAddress.isDefault || userAddresses.length === 0) {
-            setCurrentAddress(addedAddress);
-          }
-          
-          // Also update local state for backward compatibility
-          dispatch({
-            type: addressTypes.ADD_ADDRESS,
-            payload: [addedAddress, ...state.addressList],
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error saving address:', error);
-      throw error;
-    }
-  };
 
-  const updateAddress = async (addressId, updatedAddress) => {
+  const updateAddress = async (addressData) => {
     try {
       if (token) {
-        const response = await updateAddressService(addressId, updatedAddress, token);
+        const response = await updateAddressService(addressData, token);
         if (response.data.success) {
-          const updatedAddr = response.data.data.address;
-          setUserAddresses(prev => prev.map(addr => 
-            addr._id === addressId ? updatedAddr : addr
-          ));
-          
-          // If this address is marked as default, set it as current
-          if (updatedAddr.isDefault) {
-            setCurrentAddress(updatedAddr);
-          }
-          
-          // Also update local state for backward compatibility
-          dispatch({
-            type: addressTypes.ADD_ADDRESS,
-            payload: state.addressList.map((item) =>
-              item.id === addressId ? updatedAddr : item
-            ),
-          });
+          const updatedAddress = response.data.data.shippingAddress;
+          setUserAddress(updatedAddress);
         }
       }
     } catch (error) {
@@ -175,40 +142,16 @@ const ProductsContextProvider = ({ children }) => {
     }
   };
 
-  const deleteAddress = async (addressId) => {
-    try {
-      if (token) {
-        const response = await deleteAddressService(addressId, token);
-        if (response.data.success) {
-          setUserAddresses(prev => prev.filter(addr => addr._id !== addressId));
-          
-          // If we deleted the current address, set a new current address
-          if (currentAddress._id === addressId) {
-            const remainingAddresses = userAddresses.filter(addr => addr._id !== addressId);
-            if (remainingAddresses.length > 0) {
-              const newDefault = remainingAddresses.find(addr => addr.isDefault) || remainingAddresses[0];
-              setCurrentAddress(newDefault);
-            } else {
-              setCurrentAddress({});
-            }
-          }
-          
-          // Also update local state for backward compatibility
-          dispatch({
-            type: addressTypes.ADD_ADDRESS,
-            payload: state.addressList.filter(({ id }) => id !== addressId),
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting address:', error);
-      throw error;
-    }
-  };
   const isInCart = (productId) =>
     state.allProducts.find((item) => item._id === productId && item.inCart);
   const isInWish = (productId) =>
     state.allProducts.find((item) => item._id === productId && item.inWish);
+
+  // Debug currentAddress
+  console.log('🏠 Context render - userAddress:', userAddress);
+  console.log('🏠 Context render - currentAddress (userAddress):', userAddress);
+  console.log('🏠 Context render - userAddress keys:', userAddress ? Object.keys(userAddress) : 'undefined');
+  console.log('🏠 Context render - userAddress length:', userAddress ? Object.keys(userAddress).length : 'undefined');
 
   return (
     <ProductsContext.Provider
@@ -219,21 +162,19 @@ const ProductsContextProvider = ({ children }) => {
         maxRange: state.maxRange,
         categoryList: state.categoryList,
         addressList: state.addressList,
-        userAddresses,
+        userAddress,
         isInCart,
         isInWish,
         isOrderPlaced,
-        currentAddress,
+        currentAddress: userAddress,
         loading,
+        addressLoading,
         trendingProducts,
         updateInCartOrInWish,
         getProductById,
         applyFilters,
         clearFilters,
-        addAddress,
         updateAddress,
-        deleteAddress,
-        setCurrentAddress,
         setisOrderPlaced,
       }}
     >

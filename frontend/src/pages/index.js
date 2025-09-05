@@ -12,7 +12,9 @@ export { default as Profile } from "./Profile";
 
 export { default as Checkout } from "./Checkout";
 export { default as Orders } from "./Orders";
+export { default as CustomerOrders } from "./CustomerOrders";
 export { default as PaymentSuccess } from "./PaymentSuccess";
+export { default as CustomerChat } from "./CustomerChat";
 
 export { default as ErrorPage } from "./ErrorPage";
 

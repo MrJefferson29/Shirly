@@ -24,12 +24,20 @@ const StripeModal = ({ showModal, setShowModal }) => {
       return;
     }
 
+    // Debug: Check if address has required fields
+    if (!currentAddress.fullname || !currentAddress.mobile || !currentAddress.flat || !currentAddress.area || !currentAddress.city || !currentAddress.state || !currentAddress.pincode) {
+      console.error('❌ Address missing required fields:', currentAddress);
+      notify("error", "Please fill in all address fields completely.");
+      return;
+    }
+
     if (!cart || cart.length === 0) {
       notify("warn", "Your cart is empty.");
       return;
     }
 
     console.log('📋 Current address being sent:', currentAddress);
+    console.log('📋 Current address JSON:', JSON.stringify(currentAddress, null, 2));
 
     setIsCreatingCheckout(true);
 
@@ -43,11 +51,22 @@ const StripeModal = ({ showModal, setShowModal }) => {
         image: item.product.images && item.product.images.length > 0 ? item.product.images[0] : undefined
       }));
 
+      // Test: Add a hardcoded address to see if webhook parsing works
+      const testAddress = {
+        fullname: "Test User",
+        mobile: "1234567890",
+        flat: "123 Test Street",
+        area: "Test Area",
+        city: "Test City",
+        state: "Test State",
+        pincode: "12345"
+      };
+
       const checkoutData = {
         items: checkoutItems,
         totalAmount: totalPriceOfCartProducts,
         paymentMethod: 'stripe',
-        shippingAddress: currentAddress,
+        shippingAddress: currentAddress || testAddress, // Use test address as fallback
         successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${window.location.origin}/cart`
       };

@@ -200,17 +200,19 @@ export const updateOrderPaymentStatusService = (orderId, paymentStatusData, toke
   );
 
 // Address Services
-export const getUserAddressesService = (token) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/addresses`, 
+export const getUserAddressService = (token) => {
+  console.log('🏠 API: getUserAddressService called with token:', token ? 'present' : 'missing');
+  return axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/address`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }
   );
+};
 
-export const addAddressService = (addressData, token) =>
-  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/addresses`, 
+export const updateAddressService = (addressData, token) =>
+  axios.put(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/address`, 
     addressData, 
     {
       headers: {
@@ -219,9 +221,9 @@ export const addAddressService = (addressData, token) =>
     }
   );
 
-export const updateAddressService = (addressId, addressData, token) =>
-  axios.put(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/addresses/${addressId}`, 
-    addressData, 
+// Message Services
+export const getOrderMessagesService = (orderId, token) =>
+  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/messages/order/${orderId}`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -229,8 +231,92 @@ export const updateAddressService = (addressId, addressData, token) =>
     }
   );
 
-export const deleteAddressService = (addressId, token) =>
-  axios.delete(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/addresses/${addressId}`, 
+export const getUnreadMessageCountService = (token) =>
+  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/messages/unread-count`, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+export const markMessagesAsReadService = (messageIds, token) =>
+  axios.put(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/messages/mark-read`, 
+    { messageIds }, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+export const sendMessageService = (messageData, token) =>
+  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/messages/send`, 
+    messageData, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+// Review Services
+export const createReviewService = (reviewData, token) =>
+  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews`, 
+    reviewData, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+export const getProductReviewsService = (productId, params = {}) =>
+  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/product/${productId}`, 
+    { params }
+  );
+
+export const getUserReviewsService = (token, params = {}) =>
+  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/user`, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params
+    }
+  );
+
+export const canUserReviewService = (productId, orderId, token) =>
+  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/can-review/${productId}/${orderId}`, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+export const updateReviewService = (reviewId, reviewData, token) =>
+  axios.put(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/${reviewId}`, 
+    reviewData, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+export const deleteReviewService = (reviewId, token) =>
+  axios.delete(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/${reviewId}`, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+export const markReviewHelpfulService = (reviewId, token) =>
+  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/${reviewId}/helpful`, 
+    {}, 
     {
       headers: {
         Authorization: `Bearer ${token}`,

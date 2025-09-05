@@ -4,7 +4,7 @@ import PriceDetailsCard from "./PriceDetailsCard";
 import { notify } from "../../utils/utils";
 
 const SummaryCard = ({ setShowModal }) => {
-  const { addressList, currentAddress } = useProductsContext();
+  const { currentAddress } = useProductsContext();
   const { cart, totalPriceOfCartProducts, actualPriceOfCart } =
     useCartContext();
   const totalItems = cart.reduce((acc, { qty }) => acc + qty, 0);
@@ -57,10 +57,11 @@ const SummaryCard = ({ setShowModal }) => {
         <button
           onClick={() => {
             if (
-              addressList.length === 0 ||
-              Object.keys(currentAddress).length === 0
+              !currentAddress ||
+              Object.keys(currentAddress).length === 0 ||
+              !currentAddress.fullname
             ) {
-              notify("warn", "Please Select or Add an Address.");
+              notify("warn", "Please add a shipping address before proceeding.");
             } else {
               setShowModal(true);
             }

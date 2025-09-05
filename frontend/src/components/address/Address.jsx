@@ -6,51 +6,37 @@ import AddressForm from "./AddressForm";
 
 const Address = ({ isEdit }) => {
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [editAddress, setEditAddress] = useState(null);
-  const { addressList } = useProductsContext();
+  const { userAddress, updateAddress } = useProductsContext();
   return (
     <>
       {!isEdit && <h1 className="text-2xl font-bold">Address</h1>}
-      {showAddressForm && !editAddress ? (
+      {showAddressForm ? (
         <AddressForm
           setShowAddressForm={setShowAddressForm}
-          editAddress={editAddress}
-          setEditAddress={setEditAddress}
+          editAddress={userAddress}
+          onSubmit={updateAddress}
         />
       ) : (
-        <div className="flex flex-col items-start ">
-          <button
-            className="btn-rounded-primary text-sm "
-            onClick={() => {
-              setShowAddressForm(true);
-              setEditAddress(false);
-            }}
-          >
-            + Add New Address
-          </button>
+        <div className="flex flex-col gap-4">
+          {userAddress && Object.keys(userAddress).length > 0 ? (
+            <AddressCard
+              address={userAddress}
+              isEdit={isEdit}
+              onEdit={() => setShowAddressForm(true)}
+            />
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-4">No address saved yet</p>
+              <button
+                className="btn-rounded-primary text-sm"
+                onClick={() => setShowAddressForm(true)}
+              >
+                + Add Address
+              </button>
+            </div>
+          )}
         </div>
       )}
-      <div className="flex flex-col gap-2">
-        {addressList.map((address) => (
-          <Fragment key={address.id}>
-            {showAddressForm && editAddress?.id === address.id ? (
-              <AddressForm
-                setShowAddressForm={setShowAddressForm}
-                editAddress={editAddress}
-                setEditAddress={setEditAddress}
-              />
-            ) : (
-              <AddressCard
-                address={address}
-                isEdit={isEdit}
-                editAddress={editAddress}
-                setEditAddress={setEditAddress}
-                setShowAddressForm={setShowAddressForm}
-              />
-            )}
-          </Fragment>
-        ))}
-      </div>
     </>
   );
 };

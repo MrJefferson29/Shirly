@@ -7,10 +7,8 @@ const {
   getMe,
   updateProfile,
   changePassword,
-  getUserAddresses,
-  addAddress,
-  updateAddress,
-  deleteAddress
+  getUserAddress,
+  updateAddress
 } = require('../controllers/authController');
 
 const router = express.Router();
@@ -101,9 +99,7 @@ router.put('/profile', protect, updateProfileValidation, updateProfile);
 router.put('/change-password', protect, changePasswordValidation, changePassword);
 
 // Address routes
-router.get('/addresses', protect, getUserAddresses);
-router.post('/addresses', protect, addressValidation, addAddress);
-router.put('/addresses/:addressId', protect, addressValidation, updateAddress);
-router.delete('/addresses/:addressId', protect, deleteAddress);
+router.get('/address', protect, getUserAddress);
+router.put('/address', protect, addressValidation, updateAddress);
 
 module.exports = router;

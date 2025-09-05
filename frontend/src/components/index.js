@@ -25,4 +25,9 @@ export { default as NewStripeModal } from "./checkout/NewStripeModal";
 export { default as AddressCard } from "./address/AddressCard";
 export { default as AddressForm } from "./address/AddressForm";
 
+export { default as ChatModal } from "./chat/ChatModal";
+
+export { default as ReviewModal } from "./review/ReviewModal";
+export { default as ReviewList } from "./review/ReviewList";
+
 export { default as Loader } from "./loader/Loader";

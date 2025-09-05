@@ -59,55 +59,36 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order'
   }],
-  addresses: [{
-    _id: {
-      type: mongoose.Schema.Types.ObjectId,
-      default: () => new mongoose.Types.ObjectId()
-    },
+  shippingAddress: {
     fullname: {
       type: String,
-      required: true,
       trim: true
     },
     mobile: {
       type: String,
-      required: true,
       trim: true
     },
     flat: {
       type: String,
-      required: true,
       trim: true
     },
     area: {
       type: String,
-      required: true,
       trim: true
     },
     city: {
       type: String,
-      required: true,
       trim: true
     },
     state: {
       type: String,
-      required: true,
       trim: true
     },
     pincode: {
       type: String,
-      required: true,
       trim: true
-    },
-    isDefault: {
-      type: Boolean,
-      default: false
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
     }
-  }],
+  },
   isActive: {
     type: Boolean,
     default: true

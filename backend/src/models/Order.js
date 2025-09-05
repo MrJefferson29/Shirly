@@ -29,14 +29,14 @@ const orderSchema = new mongoose.Schema({
     min: 0
   },
   shippingAddress: {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    address: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    zipCode: { type: String, required: true },
-    country: { type: String, required: true, default: 'US' },
-    phone: { type: String, required: true }
+    firstName: { type: String, default: 'N/A' },
+    lastName: { type: String, default: 'N/A' },
+    address: { type: String, default: 'N/A' },
+    city: { type: String, default: 'N/A' },
+    state: { type: String, default: 'N/A' },
+    zipCode: { type: String, default: 'N/A' },
+    country: { type: String, default: 'US' },
+    phone: { type: String, default: 'N/A' }
   },
   paymentMethod: {
     type: String,
@@ -116,6 +116,17 @@ orderSchema.methods.updatePaymentStatus = function(newPaymentStatus) {
   this.paymentStatus = newPaymentStatus;
   this.updatedAt = new Date();
   return this.save();
+};
+
+// Method to check if shipping address is available
+orderSchema.methods.hasShippingAddress = function() {
+  return this.shippingAddress && 
+         this.shippingAddress.firstName !== 'N/A' && 
+         this.shippingAddress.lastName !== 'N/A' &&
+         this.shippingAddress.address !== 'N/A' &&
+         this.shippingAddress.city !== 'N/A' &&
+         this.shippingAddress.state !== 'N/A' &&
+         this.shippingAddress.zipCode !== 'N/A';
 };
 
 // Static method to find orders by user

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '../contexts';
 import { notify } from '../utils/utils';
 import { getAdminOrdersService, updateOrderStatusService } from '../api/apiServices';
+import ChatModal from '../components/chat/ChatModal';
+import { FaComments } from 'react-icons/fa';
 
 const AdminOrders = () => {
   const { token, userInfo } = useAuthContext();
@@ -11,6 +13,7 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedOrders, setExpandedOrders] = useState(new Set());
+  const [chatModal, setChatModal] = useState({ isOpen: false, orderId: null, orderNumber: '', customerName: '', orderData: null });
 
   useEffect(() => {
     if (userInfo?.role !== 'admin') {
@@ -331,8 +334,11 @@ const AdminOrders = () => {
                         <div className="text-sm font-medium text-gray-900">{order.user?.username || 'N/A'}</div>
                         <div className="text-sm text-gray-500">{order.user?.email || 'N/A'}</div>
                                                  <div className="text-xs text-gray-400">
-                           {order.shippingAddress?.city && order.shippingAddress.city !== 'N/A' && 
-                            order.shippingAddress?.state && order.shippingAddress.state !== 'N/A' 
+                           {order.shippingAddress && 
+                            order.shippingAddress.city && 
+                            order.shippingAddress.city !== 'N/A' && 
+                            order.shippingAddress.state && 
+                            order.shippingAddress.state !== 'N/A' 
                             ? `${order.shippingAddress.city}, ${order.shippingAddress.state}`
                             : 'Location not available'
                            }
@@ -413,8 +419,10 @@ const AdminOrders = () => {
                              <div>
                                <h4 className="font-medium text-gray-900 mb-3">Shipping Address</h4>
                                {order.shippingAddress && 
-                                (order.shippingAddress.firstName !== 'N/A' || 
-                                 order.shippingAddress.address !== 'N/A') ? (
+                                order.shippingAddress.firstName && 
+                                order.shippingAddress.firstName !== 'N/A' && 
+                                order.shippingAddress.address && 
+                                order.shippingAddress.address !== 'N/A' ? (
                                  <div className="space-y-2 text-sm">
                                    <div className="flex justify-between">
                                      <span className="text-gray-500">Name:</span>
@@ -489,6 +497,23 @@ const AdminOrders = () => {
                               ))}
                             </div>
                           </div>
+
+                          {/* Message Button */}
+                          <div className="mt-4 flex justify-end">
+                            <button
+                              onClick={() => setChatModal({
+                                isOpen: true,
+                                orderId: order._id,
+                                orderNumber: order.orderNumber,
+                                customerName: order.user?.username || 'Customer',
+                                orderData: order
+                              })}
+                              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                              <FaComments />
+                              Message Customer
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -513,6 +538,16 @@ const AdminOrders = () => {
           </div>
         )}
       </div>
+
+      {/* Chat Modal */}
+      <ChatModal
+        isOpen={chatModal.isOpen}
+        onClose={() => setChatModal({ isOpen: false, orderId: null, orderNumber: '', customerName: '', orderData: null })}
+        orderId={chatModal.orderId}
+        orderNumber={chatModal.orderNumber}
+        customerName={chatModal.customerName}
+        orderData={chatModal.orderData}
+      />
     </div>
   );
 };

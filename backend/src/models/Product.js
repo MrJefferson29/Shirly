@@ -100,30 +100,10 @@ const productSchema = new mongoose.Schema({
     enum: ['New', 'Used', 'Refurbished'],
     default: 'New'
   },
-  reviews: {
-    type: [{
-      user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-      },
-      rating: {
-        type: Number,
-        required: true,
-        min: 1,
-        max: 5
-      },
-      comment: {
-        type: String,
-        trim: true,
-        maxlength: [500, 'Review comment cannot exceed 500 characters']
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now
-      }
-    }],
-    default: []
+  reviewCount: {
+    type: Number,
+    default: 0,
+    min: 0
   }
 }, {
   timestamps: true
@@ -147,12 +127,31 @@ productSchema.virtual('discountPercentage').get(function() {
   return 0;
 });
 
-// Virtual for average rating
-productSchema.virtual('averageRating').get(function() {
-  if (!this.reviews || this.reviews.length === 0) return 0;
-  const sum = this.reviews.reduce((acc, review) => acc + review.rating, 0);
-  return Math.round((sum / this.reviews.length) * 10) / 10;
-});
+
+// Method to update rating and review count
+productSchema.methods.updateRating = async function() {
+  const Review = require('./Review');
+  const stats = await Review.getAverageRating(this._id);
+  
+  if (stats.length > 0) {
+    this.rating = Math.round(stats[0].averageRating * 10) / 10; // Round to 1 decimal
+    this.reviewCount = stats[0].totalReviews;
+  } else {
+    this.rating = 0;
+    this.reviewCount = 0;
+  }
+  
+  await this.save();
+  return { rating: this.rating, reviewCount: this.reviewCount };
+};
+
+// Static method to get products with reviews
+productSchema.statics.getProductsWithReviews = function(filter = {}, limit = 10, skip = 0) {
+  return this.find(filter)
+    .limit(limit)
+    .skip(skip)
+    .sort({ createdAt: -1 });
+};
 
 // Ensure virtual fields are serialized
 productSchema.set('toJSON', { virtuals: true });

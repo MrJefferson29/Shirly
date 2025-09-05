@@ -62,7 +62,6 @@ const getProducts = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('reviews.user', 'username');
 
     const total = await Product.countDocuments(filter);
 
@@ -129,7 +128,6 @@ const getTrendingProducts = async (req, res) => {
     })
       .sort({ rating: -1, createdAt: -1 })
       .limit(parseInt(limit))
-      .populate('reviews.user', 'username');
 
     res.json({
       success: true,
@@ -196,7 +194,6 @@ const getProductsByCategory = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('reviews.user', 'username');
 
     const total = await Product.countDocuments(filter);
 
@@ -244,7 +241,6 @@ const searchProducts = async (req, res) => {
       .sort({ score: { $meta: 'textScore' } })
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('reviews.user', 'username');
 
     const total = await Product.countDocuments(filter);
 

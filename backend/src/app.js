@@ -4,25 +4,43 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
 
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
+// Rate limiting (more lenient for development)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: 1000, // limit each IP to 1000 requests per windowMs (increased for development)
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 }));
 
 // Stripe Webhook must use raw body parser (MUST BE BEFORE express.json())
@@ -177,10 +195,11 @@ const handleCheckoutSessionCompleted = async (session) => {
     const userId = metadata.userId;
     const items = JSON.parse(metadata.items || '[]');
     
-    // Parse shipping address from metadata or Stripe collected information
-    console.log('📋 Metadata:', metadata);
-    console.log('📋 Shipping address in metadata:', metadata.shippingAddress);
-    console.log('📋 Stripe collected shipping details:', session.collected_information?.shipping_details);
+    // Get user's saved address as primary source
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
     
     let shippingAddress = {
       firstName: 'N/A',
@@ -193,13 +212,29 @@ const handleCheckoutSessionCompleted = async (session) => {
       phone: 'N/A'
     };
     
-    // First try to get address from metadata (frontend form)
+    // Use user's saved address if available
+    if (user.shippingAddress && Object.keys(user.shippingAddress).length > 0) {
+      const fullAddress = [user.shippingAddress.flat, user.shippingAddress.area].filter(Boolean).join(', ');
+      shippingAddress = {
+        firstName: user.shippingAddress.fullname?.split(' ')[0] || 'N/A',
+        lastName: user.shippingAddress.fullname?.split(' ').slice(1).join(' ') || 'N/A',
+        address: fullAddress || 'N/A',
+        city: user.shippingAddress.city || 'N/A',
+        state: user.shippingAddress.state || 'N/A',
+        zipCode: user.shippingAddress.pincode || 'N/A',
+        country: 'US',
+        phone: user.shippingAddress.mobile || 'N/A'
+      };
+      console.log('📋 Using user\'s saved address:', shippingAddress);
+    }
+    
+    // Check if address was updated during checkout (from metadata)
     if (metadata.shippingAddress && metadata.shippingAddress !== '{}') {
       try {
         const parsedAddress = JSON.parse(metadata.shippingAddress);
-        console.log('📋 Parsed address from metadata:', parsedAddress);
+        console.log('📋 Address updated during checkout:', parsedAddress);
         
-        // Map frontend address fields to backend fields
+        // Use the updated address for the order
         const fullAddress = [parsedAddress.flat, parsedAddress.area].filter(Boolean).join(', ');
         shippingAddress = {
           firstName: parsedAddress.fullname?.split(' ')[0] || 'N/A',
@@ -211,32 +246,11 @@ const handleCheckoutSessionCompleted = async (session) => {
           country: 'US',
           phone: parsedAddress.mobile || 'N/A'
         };
-        console.log('📋 Mapped shipping address from metadata:', shippingAddress);
+        console.log('📋 Using updated address for order:', shippingAddress);
       } catch (parseError) {
         console.error('❌ Error parsing shipping address from metadata:', parseError);
+        console.error('❌ Raw metadata.shippingAddress:', metadata.shippingAddress);
       }
-    } 
-    // Fallback to Stripe collected shipping information
-    else if (session.collected_information?.shipping_details) {
-      const stripeShipping = session.collected_information.shipping_details;
-      console.log('📋 Using Stripe collected shipping details:', stripeShipping);
-      
-      const fullName = stripeShipping.name || 'N/A';
-      const addressParts = [stripeShipping.address?.line1, stripeShipping.address?.line2].filter(Boolean);
-      
-      shippingAddress = {
-        firstName: fullName.split(' ')[0] || 'N/A',
-        lastName: fullName.split(' ').slice(1).join(' ') || 'N/A',
-        address: addressParts.join(', ') || 'N/A',
-        city: stripeShipping.address?.city || 'N/A',
-        state: stripeShipping.address?.state || 'N/A',
-        zipCode: stripeShipping.address?.postal_code || 'N/A',
-        country: stripeShipping.address?.country || 'US',
-        phone: 'N/A' // Stripe doesn't collect phone in shipping details
-      };
-      console.log('📋 Mapped shipping address from Stripe:', shippingAddress);
-    } else {
-      console.log('⚠️ No shipping address found in metadata or Stripe collected information');
     }
     
     // Create order from checkout session
@@ -255,6 +269,30 @@ const handleCheckoutSessionCompleted = async (session) => {
     
     await order.save();
     console.log('✅ Order created from checkout session:', order._id);
+    
+    // Update user's shipping address if it was changed during checkout
+    if (metadata.shippingAddress && metadata.shippingAddress !== '{}') {
+      try {
+        const parsedAddress = JSON.parse(metadata.shippingAddress);
+        console.log('📋 Updating user shipping address:', parsedAddress);
+        
+        // Update the user's shipping address
+        user.shippingAddress = {
+          fullname: parsedAddress.fullname,
+          mobile: parsedAddress.mobile,
+          flat: parsedAddress.flat,
+          area: parsedAddress.area,
+          city: parsedAddress.city,
+          state: parsedAddress.state,
+          pincode: parsedAddress.pincode
+        };
+        
+        await user.save();
+        console.log('✅ User shipping address updated');
+      } catch (addressError) {
+        console.error('❌ Error updating user shipping address:', addressError);
+      }
+    }
     
     // Clear user's cart after successful order
     try {
@@ -278,6 +316,8 @@ const wishlistRoutes = require('./routes/wishlist');
 const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const paymentRoutes = require('./routes/payments');
+const messageRoutes = require('./routes/messages');
+const reviewRoutes = require('./routes/reviews');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -288,6 +328,8 @@ app.use('/api/user/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 
 console.log('✅ All routes loaded successfully');
@@ -323,8 +365,14 @@ app.post('/api/test-webhook', async (req, res) => {
     const mockSession = {
       id: 'cs_test_' + Date.now(),
       metadata: {
-        userId: req.body.userId || 'test_user_id',
-        items: JSON.stringify(req.body.items || [])
+        userId: req.body.userId || '68bb56c348bccb4ca59be6d9', // Use real user ID
+        items: JSON.stringify(req.body.items || [{
+          product: '68b778cf97508f5d155f156c',
+          quantity: 1,
+          price: 200,
+          name: 'I got a chopper',
+          image: 'https://res.cloudinary.com/da57ehczx/image/upload/v1756854469/eyesome/products/x1xjzhxyvzuvkvtuizwf.jpg'
+        }])
       },
       amount_total: (req.body.totalAmount || 100) * 100, // Convert to cents
       customer_details: {
@@ -366,13 +414,99 @@ app.use('*', (req, res) => {
   });
 });
 
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('🔌 User connected:', socket.id);
+
+  // Join order-specific room
+  socket.on('join-order', (orderId) => {
+    socket.join(`order-${orderId}`);
+    console.log(`👥 User ${socket.id} joined order room: order-${orderId}`);
+  });
+
+  // Handle new message
+  socket.on('send-message', async (data) => {
+    try {
+      const Message = require('./models/Message');
+      const User = require('./models/User');
+      const { orderId, senderId, receiverId, message, senderType } = data;
+
+      // If receiverId is 'admin', find the actual admin user
+      let actualReceiverId = receiverId;
+      if (receiverId === 'admin') {
+        const admin = await User.findOne({ role: 'admin' });
+        if (admin) {
+          actualReceiverId = admin._id;
+        } else {
+          throw new Error('No admin user found');
+        }
+      }
+
+      // Save message to database
+      const newMessage = new Message({
+        order: orderId,
+        sender: senderId,
+        receiver: actualReceiverId,
+        message,
+        senderType
+      });
+
+      await newMessage.save();
+
+      // Populate sender and receiver for the response
+      await newMessage.populate('sender', 'username email role');
+      await newMessage.populate('receiver', 'username email role');
+      
+      // Hide admin usernames for privacy
+      if (newMessage.sender.role === 'admin') {
+        newMessage.sender.username = 'Admin';
+      }
+      if (newMessage.receiver.role === 'admin') {
+        newMessage.receiver.username = 'Admin';
+      }
+
+      // Emit message to all users in the order room
+      io.to(`order-${orderId}`).emit('new-message', {
+        _id: newMessage._id,
+        order: newMessage.order,
+        sender: newMessage.sender,
+        receiver: newMessage.receiver,
+        message: newMessage.message,
+        senderType: newMessage.senderType,
+        isRead: newMessage.isRead,
+        createdAt: newMessage.createdAt
+      });
+
+      console.log(`💬 Message sent in order ${orderId}:`, message);
+    } catch (error) {
+      console.error('❌ Error sending message:', error);
+      socket.emit('message-error', { error: 'Failed to send message' });
+    }
+  });
+
+  // Handle message read status
+  socket.on('mark-message-read', async (messageId) => {
+    try {
+      const Message = require('./models/Message');
+      await Message.findByIdAndUpdate(messageId, { isRead: true });
+      console.log(`✅ Message ${messageId} marked as read`);
+    } catch (error) {
+      console.error('❌ Error marking message as read:', error);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔌 User disconnected:', socket.id);
+  });
+});
+
 // Error handling middleware
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);

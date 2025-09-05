@@ -4,6 +4,7 @@ import { BsBookmarkHeart } from "react-icons/bs";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import { MdOutlineExplore } from "react-icons/md";
 import { MdAdminPanelSettings } from "react-icons/md";
+import { FaComments } from "react-icons/fa";
 
 import { RxHamburgerMenu } from "react-icons/rx";
 import defaultUser from "../../assets/defaultUser.png";
@@ -109,6 +110,14 @@ const Navbar = () => {
                 </div>
               )}
             </li>
+            {userInfo?.role !== 'admin' && (
+              <li
+                className="relative bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 cursor-pointer mx-2 transition shadow-sm"
+                onClick={() => navigate("/chat")}
+              >
+                <FaComments />
+              </li>
+            )}
             <li
               className="relative bg-yellow-500 text-white p-2 rounded-full hover:bg-yellow-800 cursor-pointer mx-2 transition shadow-sm"
               onClick={() => navigate("/cart")}
