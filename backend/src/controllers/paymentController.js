@@ -713,8 +713,12 @@ const createOrder = async (req, res) => {
 // @access  Private
 const createCheckoutSession = async (req, res) => {
   try {
-    const { items, totalAmount, paymentMethod, successUrl, cancelUrl } = req.body;
+    const { items, totalAmount, paymentMethod, shippingAddress, successUrl, cancelUrl } = req.body;
     const userId = req.user._id;
+    
+    console.log('📋 Backend received shipping address:', shippingAddress);
+    console.log('📋 Shipping address type:', typeof shippingAddress);
+    console.log('📋 Shipping address keys:', shippingAddress ? Object.keys(shippingAddress) : 'undefined');
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -791,7 +795,8 @@ const createCheckoutSession = async (req, res) => {
       metadata: {
         userId: userId.toString(),
         paymentMethod: paymentMethod || 'card',
-        items: JSON.stringify(items)
+        items: JSON.stringify(items),
+        shippingAddress: JSON.stringify(shippingAddress || {})
       },
       allow_promotion_codes: true,
       billing_address_collection: 'auto',

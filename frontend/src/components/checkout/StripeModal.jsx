@@ -5,6 +5,7 @@ import { createCheckoutSessionService } from "../../api/apiServices";
 import { notify } from "../../utils/utils";
 import { useNavigate } from "react-router";
 import OrderSummary from "./OrderSummary";
+import AddressSelector from "../address/AddressSelector";
 
 const StripeModal = ({ showModal, setShowModal }) => {
   const { userInfo, token } = useAuthContext();
@@ -14,6 +15,10 @@ const StripeModal = ({ showModal, setShowModal }) => {
   const navigate = useNavigate();
 
   const createCheckoutSession = async () => {
+    console.log('📋 Current address check:', currentAddress);
+    console.log('📋 Address keys:', currentAddress ? Object.keys(currentAddress) : 'undefined');
+    console.log('📋 Address length:', currentAddress ? Object.keys(currentAddress).length : 'undefined');
+    
     if (!currentAddress || Object.keys(currentAddress).length === 0) {
       notify("warn", "Please select or add a shipping address.");
       return;
@@ -23,6 +28,8 @@ const StripeModal = ({ showModal, setShowModal }) => {
       notify("warn", "Your cart is empty.");
       return;
     }
+
+    console.log('📋 Current address being sent:', currentAddress);
 
     setIsCreatingCheckout(true);
 
@@ -36,14 +43,19 @@ const StripeModal = ({ showModal, setShowModal }) => {
         image: item.product.images && item.product.images.length > 0 ? item.product.images[0] : undefined
       }));
 
-      // Create checkout session
-      const response = await createCheckoutSessionService({
+      const checkoutData = {
         items: checkoutItems,
         totalAmount: totalPriceOfCartProducts,
         paymentMethod: 'stripe',
+        shippingAddress: currentAddress,
         successUrl: `${window.location.origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${window.location.origin}/cart`
-      }, token);
+      };
+
+      console.log('📋 Checkout data being sent:', checkoutData);
+
+      // Create checkout session
+      const response = await createCheckoutSessionService(checkoutData, token);
       
       if (response.data.success) {
         // Redirect to Stripe Checkout
@@ -92,19 +104,15 @@ const StripeModal = ({ showModal, setShowModal }) => {
                     </div>
                   </div>
 
-                  {/* Address Summary */}
-                  {currentAddress && Object.keys(currentAddress).length > 0 && (
-                    <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                      <h4 className="font-semibold mb-2">Shipping Address</h4>
-                      <div className="text-sm">
-                        <p>{currentAddress.fullname || currentAddress.fullName}</p>
-                        <p>{currentAddress.flat || currentAddress.street}</p>
-                        <p>{currentAddress.city}, {currentAddress.state || 'NY'} {currentAddress.pincode || currentAddress.zipCode}</p>
-                        <p>{currentAddress.country || 'US'}</p>
-                        <p>{currentAddress.mobile || currentAddress.phone}</p>
-                      </div>
-                    </div>
-                  )}
+                  {/* Address Selection */}
+                  <div className="mt-4">
+                    <AddressSelector 
+                      onAddressSelect={(address) => {
+                        console.log('Address selected:', address);
+                      }}
+                      selectedAddress={currentAddress}
+                    />
+                  </div>
 
                   {/* Checkout Button */}
                   <div className="mt-6">

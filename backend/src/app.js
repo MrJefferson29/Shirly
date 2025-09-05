@@ -177,26 +177,80 @@ const handleCheckoutSessionCompleted = async (session) => {
     const userId = metadata.userId;
     const items = JSON.parse(metadata.items || '[]');
     
+    // Parse shipping address from metadata or Stripe collected information
+    console.log('📋 Metadata:', metadata);
+    console.log('📋 Shipping address in metadata:', metadata.shippingAddress);
+    console.log('📋 Stripe collected shipping details:', session.collected_information?.shipping_details);
+    
+    let shippingAddress = {
+      firstName: 'N/A',
+      lastName: 'N/A',
+      address: 'N/A',
+      city: 'N/A',
+      state: 'N/A',
+      zipCode: 'N/A',
+      country: 'US',
+      phone: 'N/A'
+    };
+    
+    // First try to get address from metadata (frontend form)
+    if (metadata.shippingAddress && metadata.shippingAddress !== '{}') {
+      try {
+        const parsedAddress = JSON.parse(metadata.shippingAddress);
+        console.log('📋 Parsed address from metadata:', parsedAddress);
+        
+        // Map frontend address fields to backend fields
+        const fullAddress = [parsedAddress.flat, parsedAddress.area].filter(Boolean).join(', ');
+        shippingAddress = {
+          firstName: parsedAddress.fullname?.split(' ')[0] || 'N/A',
+          lastName: parsedAddress.fullname?.split(' ').slice(1).join(' ') || 'N/A',
+          address: fullAddress || 'N/A',
+          city: parsedAddress.city || 'N/A',
+          state: parsedAddress.state || 'N/A',
+          zipCode: parsedAddress.pincode || 'N/A',
+          country: 'US',
+          phone: parsedAddress.mobile || 'N/A'
+        };
+        console.log('📋 Mapped shipping address from metadata:', shippingAddress);
+      } catch (parseError) {
+        console.error('❌ Error parsing shipping address from metadata:', parseError);
+      }
+    } 
+    // Fallback to Stripe collected shipping information
+    else if (session.collected_information?.shipping_details) {
+      const stripeShipping = session.collected_information.shipping_details;
+      console.log('📋 Using Stripe collected shipping details:', stripeShipping);
+      
+      const fullName = stripeShipping.name || 'N/A';
+      const addressParts = [stripeShipping.address?.line1, stripeShipping.address?.line2].filter(Boolean);
+      
+      shippingAddress = {
+        firstName: fullName.split(' ')[0] || 'N/A',
+        lastName: fullName.split(' ').slice(1).join(' ') || 'N/A',
+        address: addressParts.join(', ') || 'N/A',
+        city: stripeShipping.address?.city || 'N/A',
+        state: stripeShipping.address?.state || 'N/A',
+        zipCode: stripeShipping.address?.postal_code || 'N/A',
+        country: stripeShipping.address?.country || 'US',
+        phone: 'N/A' // Stripe doesn't collect phone in shipping details
+      };
+      console.log('📋 Mapped shipping address from Stripe:', shippingAddress);
+    } else {
+      console.log('⚠️ No shipping address found in metadata or Stripe collected information');
+    }
+    
     // Create order from checkout session
     const order = new Order({
       user: userId,
       items: items,
       totalAmount: session.amount_total / 100, // Convert from cents
-      shippingAddress: {
-        firstName: session.customer_details?.name?.split(' ')[0] || 'N/A',
-        lastName: session.customer_details?.name?.split(' ').slice(1).join(' ') || 'N/A',
-        address: session.customer_details?.address?.line1 || 'N/A',
-        city: session.customer_details?.address?.city || 'N/A',
-        state: session.customer_details?.address?.state || 'N/A',
-        zipCode: session.customer_details?.address?.postal_code || 'N/A',
-        country: session.customer_details?.address?.country || 'US',
-        phone: session.customer_details?.phone || 'N/A'
-      },
+      shippingAddress: shippingAddress,
       paymentMethod: 'stripe',
       paymentStatus: 'completed',
       status: 'confirmed',
       stripePaymentIntentId: session.payment_intent,
-      transactionId: session.id
+      transactionId: session.id,
+      stripeSessionId: session.id
     });
     
     await order.save();

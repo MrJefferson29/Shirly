@@ -13,17 +13,7 @@ export const initialState = {
     sortBy: "",
     searchText: "",
   },
-  addressList: [
-    {
-      id: "61bf1558-94c3-4494-a522-0aad46ed5334",
-      fullname: "Jeon Jungkook",
-      mobile: "0637291830",
-      flat: "42, Yongsan Trade Center, Yongsan ",
-      area: "Hangang-daero",
-      city: "Seoul",
-      pincode: "04322",
-    },
-  ],
+  addressList: [],
 };
 
 export const productsReducer = (state, action) => {

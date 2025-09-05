@@ -198,3 +198,42 @@ export const updateOrderPaymentStatusService = (orderId, paymentStatusData, toke
       },
     }
   );
+
+// Address Services
+export const getUserAddressesService = (token) =>
+  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/addresses`, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+export const addAddressService = (addressData, token) =>
+  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/addresses`, 
+    addressData, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+export const updateAddressService = (addressId, addressData, token) =>
+  axios.put(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/addresses/${addressId}`, 
+    addressData, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+export const deleteAddressService = (addressId, token) =>
+  axios.delete(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/addresses/${addressId}`, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useProductsContext } from "../../contexts";
 import { v4 as uuid } from "uuid";
 
-const AddressForm = ({ setShowAddressForm, editAddress, setEditAddress }) => {
+const AddressForm = ({ setShowAddressForm, editAddress, setEditAddress, onSubmit }) => {
   const { addAddress, setCurrentAddress, updateAddress } = useProductsContext();
   const [newAddress, setNewAddress] = useState(
     editAddress
@@ -18,16 +18,24 @@ const AddressForm = ({ setShowAddressForm, editAddress, setEditAddress }) => {
           pincode: "",
         }
   );
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
 
-    if (editAddress) {
-      updateAddress(newAddress.id, newAddress);
-    } else {
-      addAddress(newAddress);
-      setCurrentAddress(newAddress);
+    try {
+      if (onSubmit) {
+        await onSubmit(newAddress);
+      } else {
+        if (editAddress) {
+          await updateAddress(newAddress.id, newAddress);
+        } else {
+          await addAddress(newAddress);
+        }
+      }
+      setShowAddressForm(false);
+    } catch (error) {
+      console.error('Error saving address:', error);
+      // You might want to show an error message to the user here
     }
-    setShowAddressForm(false);
   };
   return (
     <form
