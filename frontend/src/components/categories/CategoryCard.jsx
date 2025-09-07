@@ -14,20 +14,19 @@ const CategoryCard = ({
   };
   return (
     <section
-      className=" flex flex-col items-center rounded-xl  bg-black/[.06] cursor-pointer gap-3 relative overflow-hidden  categoryContainer"
+      className="flex flex-col items-center rounded-lg bg-white border border-gray-200 cursor-pointer gap-3 relative overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
       onClick={clickHandler}
     >
       <img
         src={categoryImg}
         alt={categoryName}
-        className="rounded-xl h-full w-full object-cover transition-all delay-75 ease-out"
+        className="rounded-lg h-full w-full object-cover transition-all duration-300 ease-out"
       />
       <div
-        className="
-             flex flex-col w-full h-full justify-center items-center
-            transition-all delay-75 absolute left-0 right-0 bottom-0 top-0 bg-black/[0.3] rounded-xl"
+        className="flex flex-col w-full h-full justify-center items-center
+        transition-all duration-300 absolute left-0 right-0 bottom-0 top-0 bg-black/[0.7] rounded-lg"
       >
-        <h1 className="text-4xl xs:text-6xl sm:text-8xl lg:text-6xl font-extrabold capitalize text-[--theme-color] shadow-sm p-3 break-all">
+        <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-4xl font-bold capitalize text-white shadow-sm p-3 break-all">
           {categoryName}
         </h1>
       </div>

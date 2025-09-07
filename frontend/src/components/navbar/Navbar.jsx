@@ -4,7 +4,7 @@ import { BsBookmarkHeart } from "react-icons/bs";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import { MdOutlineExplore } from "react-icons/md";
 import { MdAdminPanelSettings } from "react-icons/md";
-import { FaComments } from "react-icons/fa";
+import { HiOutlineSupport } from "react-icons/hi";
 
 import { RxHamburgerMenu } from "react-icons/rx";
 import defaultUser from "../../assets/defaultUser.png";
@@ -59,15 +59,15 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`flex flex-col sm:flex-row py-3 max-w-screen mb-3 fixed left-0 right-0 px-[4%] md:px-[10%] bg-[--theme-color] ${
-        colorChange ? "shadow-sm  drop-shadow-sm" : ""
+      className={`flex flex-col sm:flex-row py-3 max-w-screen mb-3 fixed left-0 right-0 px-6 bg-white border-b border-gray-200 ${
+        colorChange ? "shadow-sm drop-shadow-sm" : ""
       } z-10 transition delay-75 ease-in-out`}
     >
       <div className="flex justify-between w-full items-center">
         <section className="relative flex items-center">
           <Link to="/profile">
             <img
-              className="rounded-full border-2  bg-yellow-300 me-3 hover:bg-yellow-500 cursor-pointer"
+              className="rounded-full border-2 border-gray-200 bg-gray-100 me-3 hover:bg-gray-200 cursor-pointer"
               src={defaultUser}
               alt="userProfileImage"
               width={40}
@@ -92,7 +92,7 @@ const Navbar = () => {
           ) : (
             <Link
               to="/products"
-              className="mx-2 px-3 py-1 shadow-sm rounded-md text-white bg-yellow-700 text-sm hover:bg-yellow-800 transition"
+              className="mx-2 px-3 py-1 shadow-sm rounded-md text-white bg-black text-sm hover:bg-gray-800 transition"
             >
               <span className="hidden xs:block">Explore</span>{" "}
               <MdOutlineExplore className="xs:hidden" />
@@ -100,7 +100,7 @@ const Navbar = () => {
           )}
           <ul className=" hidden md:flex justify-between text-2xl ps-1">
             <li
-              className="relative bg-gray-200  p-2 rounded-full hover:bg-yellow-800 hover:text-white cursor-pointer mx-2 transition shadow-sm"
+              className="relative bg-gray-200 p-2 rounded-full hover:bg-black hover:text-white cursor-pointer mx-2 transition shadow-sm"
               onClick={() => navigate("/wishlist")}
             >
               <BsBookmarkHeart />
@@ -112,14 +112,14 @@ const Navbar = () => {
             </li>
             {userInfo?.role !== 'admin' && (
               <li
-                className="relative bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 cursor-pointer mx-2 transition shadow-sm"
+                className="relative bg-black text-white p-2 rounded-full hover:bg-gray-800 cursor-pointer mx-2 transition shadow-sm"
                 onClick={() => navigate("/chat")}
               >
-                <FaComments />
+                <HiOutlineSupport />
               </li>
             )}
             <li
-              className="relative bg-yellow-500 text-white p-2 rounded-full hover:bg-yellow-800 cursor-pointer mx-2 transition shadow-sm"
+              className="relative bg-black text-white p-2 rounded-full hover:bg-gray-800 cursor-pointer mx-2 transition shadow-sm"
               onClick={() => navigate("/cart")}
             >
               <HiOutlineShoppingBag />

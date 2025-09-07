@@ -54,44 +54,50 @@ const ProductListing = () => {
           </span>
         </div>
       ) : (
-        <div>
-          <header className="mb-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <header className="mb-8">
             <img
               src={bannerImg}
               alt="bannerImg"
-              className="rounded-md h-full min-h-[10rem] object-cover"
+              className="rounded-lg h-full min-h-[12rem] object-cover w-full"
             />
           </header>
-          <section className="py-3 flex flex-col md:flex-row gap-2 justify-between">
-            <h1 className="text-2xl font-bold">Glasses for You!</h1>
-            <div className="flex items-center gap-2">
+          
+          <section className="py-6 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-black">Glasses for You!</h1>
+            <div className="flex items-center gap-3">
               <Filters
                 isFilterOpen={isFilterOpen}
                 setIsFilterOpen={setIsFilterOpen}
               />
               <SortBy />
               <button
-                className={`flex py-1 px-2 rounded-md shadow-md items-center  gap-1 hover:bg-[--primary-text-color] hover:text-white hover:shadow-lg ${
-                  isFilterOpen ? "bg-[--primary-text-color] text-white" : ""
+                className={`flex py-2 px-4 rounded-lg shadow-sm items-center gap-2 hover:bg-black hover:text-white hover:shadow-md transition-all duration-200 ${
+                  isFilterOpen ? "bg-black text-white" : "bg-gray-100 text-gray-700"
                 }`}
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
               >
                 <BiFilter className="text-lg" />
-                <span className="text-sm">Filters</span>
+                <span className="text-sm font-medium">Filters</span>
               </button>
             </div>
           </section>
 
           {productsList.length > 0 ? (
-            <main className="relative grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+            <main className="relative grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 pb-12">
               {productsList.map((glass) => (
                 <SingleProduct key={glass.id} product={glass} />
               ))}
             </main>
           ) : (
-            <p className="font-sans text-4xl  font-bold uppercase  tracking-wide text-gray-300 text-center w-full py-32">
-              Nothing to Show!
-            </p>
+            <div className="text-center py-20">
+              <p className="text-2xl md:text-3xl font-bold text-gray-400 mb-4">
+                Nothing to Show!
+              </p>
+              <p className="text-gray-500">
+                Try adjusting your filters or search criteria.
+              </p>
+            </div>
           )}
           <button
             className={` fixed bottom-10 bg-gray-800 right-2 p-2 rounded-full text-xl shadow-2xl transition-all delay-100 ease-in-out ${

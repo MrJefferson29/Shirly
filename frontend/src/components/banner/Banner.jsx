@@ -1,18 +1,17 @@
 import { BsArrowDownRightCircle } from "react-icons/bs";
-
 import bannerImg from "../../assets/bannerImg.png";
 import { useNavigate } from "react-router";
 
-const Banner = ({ catRef }) => {
+const Banner = () => {
   const navigate = useNavigate();
 
   return (
-    <main className=" flex justify-between items-center py-1 mb-5  relative">
-      <section className="max-w-xl mx-auto sm:mx-0  w-full py-2  lg:w-1/3">
-        <h1 className="text-6xl  sm:text-7xl lg:text-8xl font-semibold  py-3 w-full ">
+    <main className="flex justify-between items-center py-1 mb-5 relative px-4 sm:px-6 lg:px-8">
+      <section className="max-w-xl mx-auto sm:mx-0 w-full py-2 lg:w-1/3">
+        <h1 className="text-6xl sm:text-7xl lg:text-8xl font-semibold py-3 w-full">
           Glasses & Lens
         </h1>
-        <p className="py-3 text-md  text-gray-600">
+        <p className="py-3 text-md text-gray-600">
           Buy the best high-quality sunglasses from us.
           <br />
           More than 100 types of assortment.
@@ -26,11 +25,15 @@ const Banner = ({ catRef }) => {
           </button>
           <button
             className="p-3 flex items-center"
-            onClick={() =>
-              catRef.current.scrollIntoView({
-                behavior: "smooth",
-              })
-            }
+            onClick={() => {
+              // Scroll to the trending section
+              const trendingSection = document.querySelector('[data-section="trending"]');
+              if (trendingSection) {
+                trendingSection.scrollIntoView({
+                  behavior: "smooth",
+                });
+              }
+            }}
           >
             <span className="mx-2 text-sm md:text-base">Explore More</span>{" "}
             <BsArrowDownRightCircle className="text-lg" />

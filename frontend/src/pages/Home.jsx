@@ -1,14 +1,11 @@
-import { useRef } from "react";
-import { Banner, CategoryList, Footer, Trending } from "../components";
+import { Banner, LandingContent, Trending } from "../components";
 
 const Home = () => {
-  const catRef = useRef(null);
   return (
     <>
-      <Banner catRef={catRef} />
+      <Banner />
       <Trending />
-      <CategoryList catRef={catRef} />
-      <Footer />
+      <LandingContent />
     </>
   );
 };

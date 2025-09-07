@@ -832,11 +832,133 @@ const createCheckoutSession = async (req, res) => {
   }
 };
 
+// @desc    Create Order from Checkout Session (Fallback for local development)
+// @route   POST /api/payments/create-order-from-session
+// @access  Private
+const createOrderFromSession = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    const userId = req.user._id;
+
+    if (!sessionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Session ID is required'
+      });
+    }
+
+    // Retrieve the checkout session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Checkout session not found'
+      });
+    }
+
+    if (session.payment_status !== 'paid') {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment not completed'
+      });
+    }
+
+    // Check if order already exists
+    const existingOrder = await Order.findOne({ stripeSessionId: sessionId });
+    if (existingOrder) {
+      return res.json({
+        success: true,
+        message: 'Order already exists',
+        data: { order: existingOrder }
+      });
+    }
+
+    // Parse items from metadata
+    const metadata = session.metadata;
+    const items = JSON.parse(metadata.items || '[]');
+    
+    // Get user for address
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Prepare shipping address
+    let shippingAddress = {
+      firstName: 'N/A',
+      lastName: 'N/A',
+      address: 'N/A',
+      city: 'N/A',
+      state: 'N/A',
+      zipCode: 'N/A',
+      country: 'US',
+      phone: 'N/A'
+    };
+
+    // Use address from metadata if available
+    if (metadata.shippingAddress && metadata.shippingAddress !== '{}') {
+      try {
+        const parsedAddress = JSON.parse(metadata.shippingAddress);
+        const fullAddress = [parsedAddress.flat, parsedAddress.area].filter(Boolean).join(', ');
+        shippingAddress = {
+          firstName: parsedAddress.fullname?.split(' ')[0] || 'N/A',
+          lastName: parsedAddress.fullname?.split(' ').slice(1).join(' ') || 'N/A',
+          address: fullAddress || 'N/A',
+          city: parsedAddress.city || 'N/A',
+          state: parsedAddress.state || 'N/A',
+          zipCode: parsedAddress.pincode || 'N/A',
+          country: 'US',
+          phone: parsedAddress.mobile || 'N/A'
+        };
+      } catch (parseError) {
+        console.error('Error parsing shipping address:', parseError);
+      }
+    }
+
+    // Create order
+    const order = new Order({
+      user: userId,
+      items: items,
+      totalAmount: session.amount_total / 100, // Convert from cents
+      shippingAddress: shippingAddress,
+      paymentMethod: 'stripe',
+      paymentStatus: 'completed',
+      status: 'confirmed',
+      stripePaymentIntentId: session.payment_intent,
+      transactionId: session.id,
+      stripeSessionId: session.id
+    });
+
+    await order.save();
+
+    console.log('✅ Order created from session (fallback):', order._id);
+
+    res.json({
+      success: true,
+      message: 'Order created successfully',
+      data: { order }
+    });
+
+  } catch (error) {
+    console.error('❌ Error creating order from session:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create order from session',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createPaymentIntent,
   createPaymentIntentLegacy,
   createOrder,
   createCheckoutSession,
+  createOrderFromSession,
   confirmPayment,
   getPaymentMethods,
   getUserOrders,

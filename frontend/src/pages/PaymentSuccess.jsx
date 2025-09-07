@@ -1,40 +1,65 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../contexts';
+import { useAuthContext, useCartContext } from '../contexts';
 import { notify } from '../utils/utils';
+import { createOrderFromSessionService } from '../api/apiServices';
 
 const PaymentSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { token } = useAuthContext();
+  const { clearCart } = useCartContext();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get session ID from URL params
-    const urlParams = new URLSearchParams(location.search);
-    const sessionId = urlParams.get('session_id');
+    const handlePaymentSuccess = async () => {
+      // Get session ID from URL params
+      const urlParams = new URLSearchParams(location.search);
+      const sessionId = urlParams.get('session_id');
 
-    if (sessionId) {
-      // Handle Stripe checkout session success
-      notify('success', 'Payment successful! Processing your order...');
-      
-      // Wait a moment for webhook to process, then redirect
-      setTimeout(() => {
-        navigate('/orders', { 
-          state: { 
-            message: 'Payment successful! Your order has been confirmed.',
-            type: 'success'
+      if (sessionId) {
+        try {
+          // Handle Stripe checkout session success
+          notify('success', 'Payment successful! Processing your order...');
+          
+          // Clear the cart since payment was successful
+          clearCart();
+          
+          // Try to create order from session (fallback for local development)
+          try {
+            const response = await createOrderFromSessionService(sessionId, token);
+            if (response.data.success) {
+              console.log('✅ Order created successfully:', response.data.data.order);
+            }
+          } catch (orderError) {
+            console.log('ℹ️ Order creation failed (webhook may have already created it):', orderError.message);
           }
-        });
-      }, 3000);
-    } else {
-      // No session ID found, redirect to home
-      notify('error', 'Invalid payment success page');
-      navigate('/');
-    }
-    
-    setLoading(false);
-  }, [location, navigate]);
+          
+          // Wait a moment for processing, then redirect
+          setTimeout(() => {
+            navigate('/orders', { 
+              state: { 
+                message: 'Payment successful! Your order has been confirmed.',
+                type: 'success'
+              }
+            });
+          }, 2000);
+        } catch (error) {
+          console.error('Payment success handling error:', error);
+          notify('error', 'There was an issue processing your payment. Please contact support.');
+          navigate('/orders');
+        }
+      } else {
+        // No session ID found, redirect to home
+        notify('error', 'Invalid payment success page');
+        navigate('/');
+      }
+      
+      setLoading(false);
+    };
+
+    handlePaymentSuccess();
+  }, [location, navigate, clearCart, token]);
 
   if (loading) {
     return (

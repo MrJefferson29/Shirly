@@ -21,28 +21,28 @@ const SingleProduct = ({ product }) => {
 
   return (
     <div
-      className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden
-      cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-2
-      hover:border-yellow-200"
+      className="group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden
+      cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1
+      hover:border-gray-300"
       onClick={() => {
         navigate(`/product/${product._id}`);
       }}
     >
       {/* Image Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="relative overflow-hidden bg-gray-50">
         <div className="aspect-square overflow-hidden">
           <img
             src={product.images && product.images.length > 0 ? product.images[0] : '/placeholder-image.jpg'}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
         
         {/* Wishlist Button - Top Right */}
         <button
           disabled={disableWish}
-          className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md
-          hover:bg-white hover:shadow-lg transition-all duration-200 disabled:cursor-not-allowed
+          className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm
+          hover:bg-white hover:shadow-md transition-all duration-200 disabled:cursor-not-allowed
           opacity-0 group-hover:opacity-100"
           onClick={(e) => {
             e.stopPropagation();
@@ -59,41 +59,83 @@ const SingleProduct = ({ product }) => {
           }}
         >
           {product.inWish ? (
-            <BsFillBookmarkHeartFill className="text-lg text-rose-500" />
+            <BsFillBookmarkHeartFill className="text-lg text-black" />
           ) : (
-            <BsBookmarkHeart className="text-lg text-gray-600 hover:text-rose-500" />
+            <BsBookmarkHeart className="text-lg text-gray-600 hover:text-black" />
           )}
         </button>
 
         {/* Sale Badge */}
         {product.newPrice && product.newPrice < product.price && (
-          <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+          <div className="absolute top-3 left-3 bg-black text-white px-3 py-1 rounded-md text-xs font-semibold">
             Sale
           </div>
         )}
       </div>
 
       {/* Content Section */}
-      <div className="p-4 space-y-3">
+      <div className="p-5 space-y-4">
         {/* Product Info */}
-        <div className="space-y-2">
-          <h3 className="font-semibold text-gray-900 text-lg line-clamp-2 group-hover:text-yellow-600 transition-colors">
+        <div className="space-y-3">
+          <h3 className="font-semibold text-gray-900 text-lg line-clamp-2 group-hover:text-gray-700 transition-colors">
             {product.name}
           </h3>
-          <p className="text-sm text-gray-500 font-medium">{product.brand}</p>
           
-          {/* Rating */}
-          <div className="flex items-center gap-1">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <GiRoundStar 
-                  key={i} 
-                  className={`w-4 h-4 ${i < Math.floor(product.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`} 
-                />
-              ))}
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Left Column */}
+            <div className="space-y-2">
+              {/* Category Badge */}
+              <div>
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+                  {product.category}
+                </span>
+              </div>
+              
+              {/* Brand */}
+              {product.brand && (
+                <div>
+                  <span className="text-xs text-gray-500 font-medium">
+                    by {product.brand}
+                  </span>
+                </div>
+              )}
             </div>
-            <span className="text-sm text-gray-500 ml-1">({product.rating || 0})</span>
+
+            {/* Right Column */}
+            <div className="space-y-2">
+              {/* Rating */}
+              {product.rating > 0 && (
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <GiRoundStar 
+                        key={i} 
+                        className={`w-4 h-4 ${i < Math.floor(product.rating || 0) ? 'text-black' : 'text-gray-300'}`} 
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-500 ml-1">({product.rating || 0})</span>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Tags - Full Width */}
+          {product.tags && product.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {product.tags.slice(0, 3).map((tag, index) => (
+                <span key={index} className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 text-blue-600 font-medium">
+                  #{tag}
+                </span>
+              ))}
+              {product.tags.length > 3 && (
+                <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-50 text-gray-500">
+                  +{product.tags.length - 3}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Price Section */}
@@ -101,16 +143,16 @@ const SingleProduct = ({ product }) => {
           <div className="flex flex-col">
             <span className="text-xl font-bold text-gray-900">₹{product.newPrice || product.price}</span>
             {product.newPrice && product.newPrice < product.price && (
-              <span className="text-sm text-gray-500 line-through">₹{product.price}</span>
+              <span className="text-sm text-gray-400 line-through">₹{product.price}</span>
             )}
           </div>
           
           {/* Add to Cart Button */}
           <button
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200
+            className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200
             ${inCart 
-              ? 'bg-green-500 text-white hover:bg-green-600' 
-              : 'bg-yellow-500 text-white hover:bg-yellow-600 hover:shadow-lg'
+              ? 'bg-gray-800 text-white hover:bg-gray-900' 
+              : 'bg-black text-white hover:bg-gray-800'
             } disabled:cursor-not-allowed disabled:opacity-50`}
             disabled={disableCart}
             onClick={(e) => {

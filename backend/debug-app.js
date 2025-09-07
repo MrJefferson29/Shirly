@@ -39,7 +39,7 @@ console.log('✅ Middleware loaded successfully');
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'Eyesome API is running',
+    message: 'ShirlyBlack API is running',
     timestamp: new Date().toISOString()
   });
 });

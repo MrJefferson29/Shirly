@@ -195,8 +195,7 @@ router.get('/products', async (req, res) => {
     const products = await Product.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit))
-      .populate('reviews.user', 'username');
+      .limit(parseInt(limit));
     
     const total = await Product.countDocuments(filter);
     

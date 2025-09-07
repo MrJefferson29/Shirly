@@ -3,6 +3,7 @@ const { body } = require('express-validator');
 const { protect } = require('../middleware/auth');
 const {
   createCheckoutSession,
+  createOrderFromSession,
   getPaymentMethods,
   getUserOrders,
   getOrder
@@ -40,6 +41,13 @@ router.use(protect);
 // @route   POST /api/payments/create-checkout-session
 // @access  Private
 router.post('/create-checkout-session', createCheckoutSessionValidation, createCheckoutSession);
+
+// @desc    Create order from checkout session (fallback for local development)
+// @route   POST /api/payments/create-order-from-session
+// @access  Private
+router.post('/create-order-from-session', [
+  body('sessionId').notEmpty().withMessage('Session ID is required')
+], createOrderFromSession);
 
 // @desc    Create payment intent (DEPRECATED - Use create-checkout-session instead)
 // @route   POST /api/payments/create-payment-intent

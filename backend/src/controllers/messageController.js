@@ -143,7 +143,7 @@ const markMessagesAsRead = async (req, res) => {
 // @access  Private
 const sendMessage = async (req, res) => {
   try {
-    const { orderId, receiverId, message } = req.body;
+    const { orderId, receiverId, message, messageType, locationData } = req.body;
     const senderId = req.user._id;
 
     // Validate required fields
@@ -152,6 +152,26 @@ const sendMessage = async (req, res) => {
         success: false,
         message: 'Order ID, receiver ID, and message are required'
       });
+    }
+
+    // Validate location data if messageType is location
+    if (messageType === 'location') {
+      if (!locationData || !locationData.latitude || !locationData.longitude) {
+        return res.status(400).json({
+          success: false,
+          message: 'Location data with latitude and longitude is required for location messages'
+        });
+      }
+      
+      const lat = parseFloat(locationData.latitude);
+      const lng = parseFloat(locationData.longitude);
+      
+      if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid coordinates. Latitude must be between -90 and 90, longitude between -180 and 180'
+        });
+      }
     }
 
     // Verify user has access to this order
@@ -186,13 +206,24 @@ const sendMessage = async (req, res) => {
     }
 
     // Create new message
-    const newMessage = new Message({
+    const messageData = {
       order: orderId,
       sender: senderId,
       receiver: actualReceiverId,
       message: message.trim(),
+      messageType: messageType || 'text',
       senderType: req.user.role === 'admin' ? 'admin' : 'customer'
-    });
+    };
+
+    // Add location data if it's a location message
+    if (messageType === 'location' && locationData) {
+      messageData.locationData = {
+        latitude: parseFloat(locationData.latitude),
+        longitude: parseFloat(locationData.longitude)
+      };
+    }
+
+    const newMessage = new Message(messageData);
 
     await newMessage.save();
 

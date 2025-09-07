@@ -21,6 +21,23 @@ const messageSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  messageType: {
+    type: String,
+    enum: ['text', 'location'],
+    default: 'text'
+  },
+  locationData: {
+    latitude: {
+      type: Number,
+      min: -90,
+      max: 90
+    },
+    longitude: {
+      type: Number,
+      min: -180,
+      max: 180
+    }
+  },
   isRead: {
     type: Boolean,
     default: false

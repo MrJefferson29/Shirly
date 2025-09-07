@@ -351,7 +351,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/', {
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'Eyesome API is running',
+    message: 'ShirlyBlack API is running',
     timestamp: new Date().toISOString()
   });
 });
@@ -429,7 +429,7 @@ io.on('connection', (socket) => {
     try {
       const Message = require('./models/Message');
       const User = require('./models/User');
-      const { orderId, senderId, receiverId, message, senderType } = data;
+      const { orderId, senderId, receiverId, message, messageType, locationData, senderType } = data;
 
       // If receiverId is 'admin', find the actual admin user
       let actualReceiverId = receiverId;
@@ -443,13 +443,24 @@ io.on('connection', (socket) => {
       }
 
       // Save message to database
-      const newMessage = new Message({
+      const messageData = {
         order: orderId,
         sender: senderId,
         receiver: actualReceiverId,
         message,
+        messageType: messageType || 'text',
         senderType
-      });
+      };
+
+      // Add location data if it's a location message
+      if (messageType === 'location' && locationData) {
+        messageData.locationData = {
+          latitude: parseFloat(locationData.latitude),
+          longitude: parseFloat(locationData.longitude)
+        };
+      }
+
+      const newMessage = new Message(messageData);
 
       await newMessage.save();
 
@@ -472,6 +483,8 @@ io.on('connection', (socket) => {
         sender: newMessage.sender,
         receiver: newMessage.receiver,
         message: newMessage.message,
+        messageType: newMessage.messageType,
+        locationData: newMessage.locationData,
         senderType: newMessage.senderType,
         isRead: newMessage.isRead,
         createdAt: newMessage.createdAt

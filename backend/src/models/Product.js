@@ -15,7 +15,7 @@ const productSchema = new mongoose.Schema({
   },
   brand: {
     type: String,
-    required: [true, 'Brand is required'],
+    required: [false, 'Brand is required'],
     trim: true,
     maxlength: [50, 'Brand name cannot exceed 50 characters']
   },
@@ -50,11 +50,14 @@ const productSchema = new mongoose.Schema({
   },
   newPrice: {
     type: Number,
-    required: [true, 'New price is required'],
     min: [0, 'New price cannot be negative'],
     validate: {
       validator: function(value) {
-        return value <= this.price;
+        // Only validate if newPrice is provided and not null/undefined
+        if (value != null && this.price != null) {
+          return value <= this.price;
+        }
+        return true;
       },
       message: 'New price cannot be higher than original price'
     }
@@ -121,7 +124,7 @@ productSchema.index({ isActive: 1 });
 
 // Virtual for discount percentage
 productSchema.virtual('discountPercentage').get(function() {
-  if (this.price > this.newPrice) {
+  if (this.newPrice && this.price > this.newPrice) {
     return Math.round(((this.price - this.newPrice) / this.price) * 100);
   }
   return 0;

@@ -3,7 +3,7 @@ import { useAuthContext } from '../contexts';
 import { notify } from '../utils/utils';
 import { getAdminOrdersService, updateOrderStatusService } from '../api/apiServices';
 import ChatModal from '../components/chat/ChatModal';
-import { FaComments } from 'react-icons/fa';
+import { HiOutlineChat } from 'react-icons/hi';
 
 const AdminOrders = () => {
   const { token, userInfo } = useAuthContext();
@@ -11,8 +11,16 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [dateRangeFilter, setDateRangeFilter] = useState({ start: '', end: '' });
+  const [amountRangeFilter, setAmountRangeFilter] = useState({ min: '', max: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedOrders, setExpandedOrders] = useState(new Set());
+  const [selectedOrders, setSelectedOrders] = useState(new Set());
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [chatModal, setChatModal] = useState({ isOpen: false, orderId: null, orderNumber: '', customerName: '', orderData: null });
 
   useEffect(() => {
@@ -31,6 +39,31 @@ const AdminOrders = () => {
       filtered = filtered.filter(order => order.status === statusFilter);
     }
 
+    // Filter by payment status
+    if (paymentStatusFilter) {
+      filtered = filtered.filter(order => order.paymentStatus === paymentStatusFilter);
+    }
+
+    // Filter by date range
+    if (dateRangeFilter.start) {
+      filtered = filtered.filter(order => 
+        new Date(order.createdAt) >= new Date(dateRangeFilter.start)
+      );
+    }
+    if (dateRangeFilter.end) {
+      filtered = filtered.filter(order => 
+        new Date(order.createdAt) <= new Date(dateRangeFilter.end)
+      );
+    }
+
+    // Filter by amount range
+    if (amountRangeFilter.min) {
+      filtered = filtered.filter(order => order.totalAmount >= parseFloat(amountRangeFilter.min));
+    }
+    if (amountRangeFilter.max) {
+      filtered = filtered.filter(order => order.totalAmount <= parseFloat(amountRangeFilter.max));
+    }
+
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(order => 
@@ -43,8 +76,28 @@ const AdminOrders = () => {
       );
     }
 
+    // Sort orders
+    filtered.sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+
+      if (sortConfig.key === 'createdAt') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+
     setFilteredOrders(filtered);
-  }, [orders, statusFilter, searchTerm]);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [orders, statusFilter, paymentStatusFilter, dateRangeFilter, amountRangeFilter, searchTerm, sortConfig]);
 
   const fetchOrders = async () => {
     try {
@@ -89,12 +142,117 @@ const AdminOrders = () => {
     setExpandedOrders(newExpanded);
   };
 
+  const handleSort = (key) => {
+    setSortConfig(prevConfig => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const toggleOrderSelection = (orderId) => {
+    const newSelected = new Set(selectedOrders);
+    if (newSelected.has(orderId)) {
+      newSelected.delete(orderId);
+    } else {
+      newSelected.add(orderId);
+    }
+    setSelectedOrders(newSelected);
+  };
+
+  const selectAllOrders = () => {
+    if (selectedOrders.size === paginatedOrders.length) {
+      setSelectedOrders(new Set());
+    } else {
+      setSelectedOrders(new Set(paginatedOrders.map(order => order._id)));
+    }
+  };
+
+  const handleBulkAction = async (action) => {
+    if (selectedOrders.size === 0) {
+      notify('error', 'Please select orders first');
+      return;
+    }
+
+    try {
+      const selectedOrderIds = Array.from(selectedOrders);
+      
+      switch (action) {
+        case 'mark-confirmed':
+          await Promise.all(selectedOrderIds.map(id => updateOrderStatus(id, 'confirmed')));
+          notify('success', `${selectedOrderIds.length} orders marked as confirmed`);
+          break;
+        case 'mark-shipped':
+          await Promise.all(selectedOrderIds.map(id => updateOrderStatus(id, 'shipped')));
+          notify('success', `${selectedOrderIds.length} orders marked as shipped`);
+          break;
+        case 'mark-delivered':
+          await Promise.all(selectedOrderIds.map(id => updateOrderStatus(id, 'delivered')));
+          notify('success', `${selectedOrderIds.length} orders marked as delivered`);
+          break;
+        case 'export-csv':
+          exportToCSV(selectedOrderIds);
+          break;
+        default:
+          notify('error', 'Invalid action');
+      }
+      
+      setSelectedOrders(new Set());
+    } catch (error) {
+      notify('error', 'Failed to perform bulk action');
+    }
+  };
+
+  const exportToCSV = (orderIds = null) => {
+    const ordersToExport = orderIds ? 
+      filteredOrders.filter(order => orderIds.includes(order._id)) : 
+      filteredOrders;
+
+    const csvContent = [
+      ['Order Number', 'Customer', 'Email', 'Status', 'Payment Status', 'Total Amount', 'Date', 'Items'],
+      ...ordersToExport.map(order => [
+        order.orderNumber || order._id.slice(-8),
+        order.user?.username || 'N/A',
+        order.user?.email || 'N/A',
+        order.status,
+        order.paymentStatus,
+        order.totalAmount,
+        new Date(order.createdAt).toLocaleDateString(),
+        order.items.map(item => `${item.product?.name} (x${item.quantity})`).join('; ')
+      ])
+    ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    notify('success', `Exported ${ordersToExport.length} orders to CSV`);
+  };
+
+  const clearAllFilters = () => {
+    setStatusFilter('');
+    setPaymentStatusFilter('');
+    setDateRangeFilter({ start: '', end: '' });
+    setAmountRangeFilter({ min: '', max: '' });
+    setSearchTerm('');
+    setSelectedOrders(new Set());
+  };
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed': return 'bg-blue-100 text-blue-800';
-      case 'processing': return 'bg-indigo-100 text-indigo-800';
-      case 'shipped': return 'bg-purple-100 text-purple-800';
+      case 'pending': return 'bg-amber-100 text-amber-800';
+      case 'confirmed': return 'bg-orange-100 text-orange-800';
+      case 'processing': return 'bg-yellow-100 text-yellow-800';
+      case 'shipped': return 'bg-orange-200 text-orange-900';
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -103,7 +261,7 @@ const AdminOrders = () => {
 
   const getPaymentStatusColor = (paymentStatus) => {
     switch (paymentStatus) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'pending': return 'bg-amber-100 text-amber-800';
       case 'completed': return 'bg-green-100 text-green-800';
       case 'failed': return 'bg-red-100 text-red-800';
       case 'refunded': return 'bg-orange-100 text-orange-800';
@@ -113,10 +271,10 @@ const AdminOrders = () => {
 
   if (userInfo?.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[--theme-color] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600">You need admin privileges to access this page.</p>
+          <p className="text-[--secondary-text-color]">You need admin privileges to access this page.</p>
         </div>
       </div>
     );
@@ -124,78 +282,78 @@ const AdminOrders = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-yellow-600"></div>
+      <div className="min-h-screen bg-[--theme-color] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[--theme-color] py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
-          <p className="mt-2 text-gray-600">Manage customer orders and track their status</p>
+          <h1 className="text-3xl font-bold text-[--primary-text-color]">Order Management</h1>
+          <p className="mt-2 text-[--secondary-text-color]">Manage customer orders and track their status</p>
         </div>
 
         {/* Order Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                <p className="text-2xl font-semibold text-gray-900">{orders.length}</p>
+                <p className="text-sm font-medium text-[--secondary-text-color]">Total Orders</p>
+                <p className="text-2xl font-semibold text-[--primary-text-color]">{orders.length}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm font-medium text-[--secondary-text-color]">Pending</p>
+                <p className="text-2xl font-semibold text-[--primary-text-color]">
                   {orders.filter(order => order.status === 'pending').length}
                 </p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
+              <div className="p-3 bg-green-100 rounded-lg">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm font-medium text-[--secondary-text-color]">Completed</p>
+                <p className="text-2xl font-semibold text-[--primary-text-color]">
                   {orders.filter(order => order.status === 'delivered').length}
                 </p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="card p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-3 bg-amber-200 rounded-lg">
+                <svg className="w-6 h-6 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm font-medium text-[--secondary-text-color]">Total Revenue</p>
+                <p className="text-2xl font-semibold text-[--primary-text-color]">
                   ${orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0).toFixed(2)}
                 </p>
               </div>
@@ -204,24 +362,42 @@ const AdminOrders = () => {
         </div>
 
         {/* Filter Controls */}
-        <div className="bg-white rounded-lg shadow mb-6 p-6">
+        <div className="card mb-6 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-[--primary-text-color]">Filters & Search</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="px-3 py-1 text-sm bg-amber-100 text-amber-800 rounded-md hover:bg-amber-200 transition-colors"
+              >
+                {showAdvancedFilters ? 'Hide' : 'Show'} Advanced
+              </button>
+              <button
+                onClick={clearAllFilters}
+                className="px-3 py-1 text-sm bg-[--primary-text-color] text-white rounded-md hover:bg-gray-800 transition-colors"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Orders</label>
+              <label className="block text-sm font-medium text-[--primary-text-color] mb-2">Search Orders</label>
               <input
                 type="text"
                 placeholder="Search by order #, customer, or product..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color] placeholder-[--secondary-text-color]"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
+              <label className="block text-sm font-medium text-[--primary-text-color] mb-2">Order Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color]"
               >
                 <option value="">All Statuses</option>
                 <option value="pending">Pending</option>
@@ -233,34 +409,78 @@ const AdminOrders = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
-              <div className="px-3 py-2 text-sm text-gray-500 bg-gray-100 rounded-md">
-                View only - managed automatically
-              </div>
-            </div>
-            <div className="flex items-end">
-              <button
-                onClick={() => {
-                  setStatusFilter('');
-                  setSearchTerm('');
-                }}
-                className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              <label className="block text-sm font-medium text-[--primary-text-color] mb-2">Payment Status</label>
+              <select
+                value={paymentStatusFilter}
+                onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color]"
               >
-                Clear Filters
-              </button>
+                <option value="">All Payment Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+                <option value="refunded">Refunded</option>
+              </select>
             </div>
           </div>
+
+          {/* Advanced Filters */}
+          {showAdvancedFilters && (
+            <div className="mt-4 pt-4 border-t border-black/[0.1]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[--primary-text-color] mb-2">Date From</label>
+                  <input
+                    type="date"
+                    value={dateRangeFilter.start}
+                    onChange={(e) => setDateRangeFilter(prev => ({ ...prev, start: e.target.value }))}
+                    className="w-full px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[--primary-text-color] mb-2">Date To</label>
+                  <input
+                    type="date"
+                    value={dateRangeFilter.end}
+                    onChange={(e) => setDateRangeFilter(prev => ({ ...prev, end: e.target.value }))}
+                    className="w-full px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[--primary-text-color] mb-2">Min Amount</label>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={amountRangeFilter.min}
+                    onChange={(e) => setAmountRangeFilter(prev => ({ ...prev, min: e.target.value }))}
+                    className="w-full px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[--primary-text-color] mb-2">Max Amount</label>
+                  <input
+                    type="number"
+                    placeholder="999.99"
+                    value={amountRangeFilter.max}
+                    onChange={(e) => setAmountRangeFilter(prev => ({ ...prev, max: e.target.value }))}
+                    className="w-full px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color]"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Bulk Actions */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="flex flex-wrap items-center gap-4">
-              <span className="text-sm font-medium text-gray-700">Bulk Actions:</span>
+          <div className="mt-4 pt-4 border-t border-black/[0.1]">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-[--primary-text-color]">Bulk Actions:</span>
               <select
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  className="px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color]"
                 onChange={(e) => {
                   if (e.target.value) {
-                    // Implement bulk status update
-                    notify('info', 'Bulk actions coming soon!');
+                      handleBulkAction(e.target.value);
+                      e.target.value = ''; // Reset selection
                   }
                 }}
               >
@@ -268,44 +488,140 @@ const AdminOrders = () => {
                 <option value="mark-confirmed">Mark as Confirmed</option>
                 <option value="mark-shipped">Mark as Shipped</option>
                 <option value="mark-delivered">Mark as Delivered</option>
-                <option value="export-csv">Export to CSV</option>
+                  <option value="export-csv">Export Selected to CSV</option>
               </select>
+              </div>
+              <div className="flex items-center gap-4">
               <button
-                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                onClick={() => notify('info', 'Bulk actions coming soon!')}
+                  onClick={() => exportToCSV()}
+                  className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
               >
-                Apply
+                  Export All to CSV
               </button>
+                {selectedOrders.size > 0 && (
+                  <span className="text-sm text-[--secondary-text-color]">
+                    {selectedOrders.size} selected
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Orders List */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Orders ({filteredOrders.length})</h2>
+        <div className="card overflow-hidden">
+          <div className="px-6 py-4 border-b border-black/[0.1] bg-amber-50">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium text-[--primary-text-color]">
+                Orders ({filteredOrders.length})
+                {filteredOrders.length !== orders.length && (
+                  <span className="text-sm text-[--secondary-text-color] ml-2">
+                    (filtered from {orders.length} total)
+                  </span>
+                )}
+              </h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[--secondary-text-color]">Show:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    // This would need to be handled by parent component
+                    // For now, we'll keep it as display only
+                  }}
+                  className="px-2 py-1 text-sm border border-black/[0.1] rounded bg-white/[0.7] text-[--primary-text-color]"
+                >
+                  <option value={10}>10 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </div>
+            </div>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-black/[0.1]">
+              <thead className="bg-amber-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Info</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[--secondary-text-color] uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectedOrders.size === paginatedOrders.length && paginatedOrders.length > 0}
+                      onChange={selectAllOrders}
+                      className="rounded border-black/[0.1] text-amber-600 focus:ring-amber-500"
+                    />
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-[--secondary-text-color] uppercase tracking-wider cursor-pointer hover:text-[--primary-text-color] transition-colors"
+                    onClick={() => handleSort('createdAt')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Order Info
+                      {sortConfig.key === 'createdAt' && (
+                        <span className="text-amber-600">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-[--secondary-text-color] uppercase tracking-wider cursor-pointer hover:text-[--primary-text-color] transition-colors"
+                    onClick={() => handleSort('user.username')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Customer
+                      {sortConfig.key === 'user.username' && (
+                        <span className="text-amber-600">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[--secondary-text-color] uppercase tracking-wider">Items</th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-[--secondary-text-color] uppercase tracking-wider cursor-pointer hover:text-[--primary-text-color] transition-colors"
+                    onClick={() => handleSort('paymentStatus')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Payment
+                      {sortConfig.key === 'paymentStatus' && (
+                        <span className="text-amber-600">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-[--secondary-text-color] uppercase tracking-wider cursor-pointer hover:text-[--primary-text-color] transition-colors"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Order Status
+                      {sortConfig.key === 'status' && (
+                        <span className="text-amber-600">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[--secondary-text-color] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.map((order) => (
+              <tbody className="bg-white/[0.7] divide-y divide-black/[0.1]">
+                {paginatedOrders.map((order) => (
                   <React.Fragment key={order._id}>
-                    <tr className="hover:bg-gray-50">
+                    <tr className="hover:bg-amber-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedOrders.has(order._id)}
+                          onChange={() => toggleOrderSelection(order._id)}
+                          className="rounded border-black/[0.1] text-amber-600 focus:ring-amber-500"
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => toggleOrderExpansion(order._id)}
-                            className="text-gray-500 hover:text-gray-700"
+                            className="text-[--secondary-text-color] hover:text-[--primary-text-color] transition-colors"
                           >
                             {expandedOrders.has(order._id) ? (
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,22 +634,22 @@ const AdminOrders = () => {
                             )}
                           </button>
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-[--primary-text-color]">
                               #{order.orderNumber || order._id.slice(-8)}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-[--secondary-text-color]">
                               {new Date(order.createdAt).toLocaleDateString()}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm font-semibold text-amber-600">
                               ${order.totalAmount}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{order.user?.username || 'N/A'}</div>
-                        <div className="text-sm text-gray-500">{order.user?.email || 'N/A'}</div>
-                                                 <div className="text-xs text-gray-400">
+                        <div className="text-sm font-medium text-[--primary-text-color]">{order.user?.username || 'N/A'}</div>
+                        <div className="text-sm text-[--secondary-text-color]">{order.user?.email || 'N/A'}</div>
+                        <div className="text-xs text-[--secondary-text-color]">
                            {order.shippingAddress && 
                             order.shippingAddress.city && 
                             order.shippingAddress.city !== 'N/A' && 
@@ -345,10 +661,10 @@ const AdminOrders = () => {
                          </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-[--primary-text-color]">
                           {order.items.length} item{order.items.length !== 1 ? 's' : ''}
                         </div>
-                        <div className="text-xs text-gray-500 max-w-xs truncate">
+                        <div className="text-xs text-[--secondary-text-color] max-w-xs truncate">
                           {order.items.map(item => item.product?.name || 'Unknown Product').join(', ')}
                         </div>
                       </td>
@@ -357,7 +673,7 @@ const AdminOrders = () => {
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
                             {order.paymentStatus}
                           </span>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-[--secondary-text-color]">
                             {order.paymentMethod}
                           </div>
                         </div>
@@ -372,7 +688,7 @@ const AdminOrders = () => {
                           <select
                             value={order.status}
                             onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                            className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full"
+                            className="text-xs border border-black/[0.1] rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500 w-full bg-white/[0.7] text-[--primary-text-color]"
                           >
                             <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>
@@ -388,28 +704,28 @@ const AdminOrders = () => {
                     {/* Expanded Order Details */}
                     {expandedOrders.has(order._id) && (
                       <tr>
-                                                 <td colSpan="6" className="px-6 py-4 bg-gray-50">
+                        <td colSpan="6" className="px-6 py-4 bg-amber-50">
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Order Details */}
                             <div>
-                              <h4 className="font-medium text-gray-900 mb-3">Order Details</h4>
+                              <h4 className="font-medium text-[--primary-text-color] mb-3">Order Details</h4>
                               <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                  <span className="text-gray-500">Order Number:</span>
-                                  <span className="font-medium">{order.orderNumber || 'N/A'}</span>
+                                  <span className="text-[--secondary-text-color]">Order Number:</span>
+                                  <span className="font-medium text-[--primary-text-color]">{order.orderNumber || 'N/A'}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span className="text-gray-500">Created:</span>
-                                  <span className="font-medium">{new Date(order.createdAt).toLocaleString()}</span>
+                                  <span className="text-[--secondary-text-color]">Created:</span>
+                                  <span className="font-medium text-[--primary-text-color]">{new Date(order.createdAt).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span className="text-gray-500">Updated:</span>
-                                  <span className="font-medium">{new Date(order.updatedAt).toLocaleString()}</span>
+                                  <span className="text-[--secondary-text-color]">Updated:</span>
+                                  <span className="font-medium text-[--primary-text-color]">{new Date(order.updatedAt).toLocaleString()}</span>
                                 </div>
                                 {order.notes && (
                                   <div className="flex justify-between">
-                                    <span className="text-gray-500">Notes:</span>
-                                    <span className="font-medium">{order.notes}</span>
+                                    <span className="text-[--secondary-text-color]">Notes:</span>
+                                    <span className="font-medium text-[--primary-text-color]">{order.notes}</span>
                                   </div>
                                 )}
                               </div>
@@ -417,7 +733,7 @@ const AdminOrders = () => {
                             
                                                          {/* Shipping Address */}
                              <div>
-                               <h4 className="font-medium text-gray-900 mb-3">Shipping Address</h4>
+                              <h4 className="font-medium text-[--primary-text-color] mb-3">Shipping Address</h4>
                                {order.shippingAddress && 
                                 order.shippingAddress.firstName && 
                                 order.shippingAddress.firstName !== 'N/A' && 
@@ -425,36 +741,36 @@ const AdminOrders = () => {
                                 order.shippingAddress.address !== 'N/A' ? (
                                  <div className="space-y-2 text-sm">
                                    <div className="flex justify-between">
-                                     <span className="text-gray-500">Name:</span>
-                                     <span className="font-medium">
+                                    <span className="text-[--secondary-text-color]">Name:</span>
+                                    <span className="font-medium text-[--primary-text-color]">
                                        {order.shippingAddress?.firstName} {order.shippingAddress?.lastName}
                                      </span>
                                    </div>
                                    <div className="flex justify-between">
-                                     <span className="text-gray-500">Address:</span>
-                                     <span className="font-medium">{order.shippingAddress?.address}</span>
+                                    <span className="text-[--secondary-text-color]">Address:</span>
+                                    <span className="font-medium text-[--primary-text-color]">{order.shippingAddress?.address}</span>
                                    </div>
                                    <div className="flex justify-between">
-                                     <span className="text-gray-500">City:</span>
-                                     <span className="font-medium">{order.shippingAddress?.city}</span>
+                                    <span className="text-[--secondary-text-color]">City:</span>
+                                    <span className="font-medium text-[--primary-text-color]">{order.shippingAddress?.city}</span>
                                    </div>
                                    <div className="flex justify-between">
-                                     <span className="text-gray-500">State:</span>
-                                     <span className="font-medium">{order.shippingAddress?.state}</span>
+                                    <span className="text-[--secondary-text-color]">State:</span>
+                                    <span className="font-medium text-[--primary-text-color]">{order.shippingAddress?.state}</span>
                                    </div>
                                    <div className="flex justify-between">
-                                     <span className="text-gray-500">ZIP:</span>
-                                     <span className="font-medium">{order.shippingAddress?.zipCode}</span>
+                                    <span className="text-[--secondary-text-color]">ZIP:</span>
+                                    <span className="font-medium text-[--primary-text-color]">{order.shippingAddress?.zipCode}</span>
                                    </div>
                                    <div className="flex justify-between">
-                                     <span className="text-gray-500">Phone:</span>
-                                     <span className="font-medium">{order.shippingAddress?.phone}</span>
+                                    <span className="text-[--secondary-text-color]">Phone:</span>
+                                    <span className="font-medium text-[--primary-text-color]">{order.shippingAddress?.phone}</span>
                                    </div>
                                  </div>
                                ) : (
                                  <div className="space-y-2 text-sm">
-                                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                     <div className="text-yellow-800 text-sm">
+                                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                    <div className="text-amber-800 text-sm">
                                        <p className="font-medium mb-2">⚠️ Shipping Address Not Available</p>
                                        <p className="text-xs">
                                          This order was created before shipping address collection was implemented. 
@@ -472,10 +788,10 @@ const AdminOrders = () => {
                           
                           {/* Order Items */}
                           <div className="mt-6">
-                            <h4 className="font-medium text-gray-900 mb-3">Order Items</h4>
-                            <div className="bg-white rounded-lg border">
+                            <h4 className="font-medium text-[--primary-text-color] mb-3">Order Items</h4>
+                            <div className="bg-white/[0.7] rounded-lg border border-black/[0.1]">
                               {order.items.map((item, index) => (
-                                <div key={index} className="flex items-center justify-between p-4 border-b last:border-b-0">
+                                <div key={index} className="flex items-center justify-between p-4 border-b border-black/[0.1] last:border-b-0">
                                   <div className="flex items-center space-x-4">
                                     {item.product?.images && item.product.images.length > 0 && (
                                       <img 
@@ -485,13 +801,13 @@ const AdminOrders = () => {
                                       />
                                     )}
                                     <div>
-                                      <div className="font-medium text-gray-900">{item.product?.name || 'Unknown Product'}</div>
-                                      <div className="text-sm text-gray-500">{item.product?.brand || 'N/A'}</div>
+                                      <div className="font-medium text-[--primary-text-color]">{item.product?.name || 'Unknown Product'}</div>
+                                      <div className="text-sm text-[--secondary-text-color]">{item.product?.brand || 'N/A'}</div>
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm text-gray-500">Qty: {item.quantity}</div>
-                                    <div className="font-medium text-gray-900">${item.price}</div>
+                                    <div className="text-sm text-[--secondary-text-color]">Qty: {item.quantity}</div>
+                                    <div className="font-medium text-amber-600">${item.price}</div>
                                   </div>
                                 </div>
                               ))}
@@ -508,9 +824,9 @@ const AdminOrders = () => {
                                 customerName: order.user?.username || 'Customer',
                                 orderData: order
                               })}
-                              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                             >
-                              <FaComments />
+                              <HiOutlineChat />
                               Message Customer
                             </button>
                           </div>
@@ -522,17 +838,79 @@ const AdminOrders = () => {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-black/[0.1] bg-amber-50">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-[--secondary-text-color]">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} orders
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm bg-white/[0.7] text-[--primary-text-color] rounded-md border border-black/[0.1] hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                            currentPage === pageNum
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-white/[0.7] text-[--primary-text-color] border border-black/[0.1] hover:bg-amber-100'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    {totalPages > 5 && (
+                      <>
+                        <span className="text-[--secondary-text-color]">...</span>
+                        <button
+                          onClick={() => setCurrentPage(totalPages)}
+                          className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                            currentPage === totalPages
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-white/[0.7] text-[--primary-text-color] border border-black/[0.1] hover:bg-amber-100'
+                          }`}
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm bg-white/[0.7] text-[--primary-text-color] rounded-md border border-black/[0.1] hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {filteredOrders.length === 0 && (
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto h-12 w-12 text-[--secondary-text-color]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
+            <h3 className="mt-2 text-sm font-medium text-[--primary-text-color]">
               {orders.length === 0 ? 'No orders' : 'No orders match your filters'}
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[--secondary-text-color]">
               {orders.length === 0 ? 'No orders have been placed yet.' : 'Try adjusting your search criteria or clearing filters.'}
             </p>
           </div>

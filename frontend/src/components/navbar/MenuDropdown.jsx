@@ -1,7 +1,7 @@
 import { BsBookmarkHeart } from "react-icons/bs";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import { MdAdminPanelSettings } from "react-icons/md";
-import { FaComments } from "react-icons/fa";
+import { HiOutlineSupport } from "react-icons/hi";
 import { useAuthContext } from "../../contexts";
 
 const MenuDropdown = ({ navigate, onClose }) => {
@@ -28,7 +28,7 @@ const MenuDropdown = ({ navigate, onClose }) => {
         {userInfo?.role !== 'admin' && (
           <li onClick={() => handleNavigation("/chat")}>
             <span className="flex items-center px-5 py-3 hover:bg-amber-100 ">
-              <FaComments className="text-lg me-3" /> Support
+              <HiOutlineSupport className="text-lg me-3" /> Support
             </span>
           </li>
         )}

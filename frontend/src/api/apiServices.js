@@ -112,6 +112,16 @@ export const createCheckoutSessionService = (checkoutData, token) =>
     }
   );
 
+export const createOrderFromSessionService = (sessionId, token) =>
+  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/create-order-from-session`, 
+    { sessionId }, 
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
 // DEPRECATED - Use createCheckoutSessionService instead
 // export const createPaymentIntentService = (paymentData, token) =>
 //   axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/create-payment-intent`, 

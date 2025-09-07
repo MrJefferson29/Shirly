@@ -89,9 +89,7 @@ const getProducts = async (req, res) => {
 // @access  Public
 const getProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-      .populate('reviews.user', 'username')
-      .populate('category');
+    const product = await Product.findById(req.params.id);
 
     if (!product || !product.isActive) {
       return res.status(404).json({

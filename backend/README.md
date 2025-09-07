@@ -1,6 +1,6 @@
-# Eyesome Backend API
+# ShirlyBlack Backend API
 
-A fully functional Express.js backend for the Eyesome ecommerce application.
+A fully functional Express.js backend for the ShirlyBlack ecommerce application.
 
 ## 🚀 Features
 
