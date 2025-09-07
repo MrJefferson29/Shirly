@@ -218,7 +218,7 @@ const Footer = () => {
               <h5 className="text-sm font-semibold text-white uppercase tracking-wider mb-3">Follow Us</h5>
               <div className="flex space-x-3">
                 <a
-                  href="https://www.instagram.com/eyesome"
+                  href="https://www.instagram.com/shirlyblack"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200"
@@ -226,7 +226,7 @@ const Footer = () => {
                   <AiOutlineInstagram className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://www.facebook.com/eyesome"
+                  href="https://www.facebook.com/shirlyblack"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200"
@@ -234,7 +234,7 @@ const Footer = () => {
                   <AiOutlineFacebook className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://twitter.com/eyesome"
+                  href="https://twitter.com/shirlyblack"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200"
@@ -242,7 +242,7 @@ const Footer = () => {
                   <AiOutlineTwitter className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://www.youtube.com/eyesome"
+                  href="https://www.youtube.com/shirlyblack"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200"

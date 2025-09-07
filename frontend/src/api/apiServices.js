@@ -83,7 +83,7 @@ export const deleteProductFromWishlistService = (productId, token) =>
 export const getAllCategoriesService = () => axios.get(CATEGORIES_URL);
 
 export const getCurrentUserService = (token) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/me`, {
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -92,7 +92,7 @@ export const getCurrentUserService = (token) =>
 // Order Services (moved to payment services section below)
 
 export const getOrderByIdService = (orderId, token) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/orders/${orderId}`, {
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/orders/${orderId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -100,10 +100,10 @@ export const getOrderByIdService = (orderId, token) =>
 
 // Payment Services
 export const getPaymentMethodsService = () =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/methods`);
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/methods`);
 
 export const createCheckoutSessionService = (checkoutData, token) =>
-  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/create-checkout-session`, 
+  axios.post(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/create-checkout-session`, 
     checkoutData, 
     {
       headers: {
@@ -113,7 +113,7 @@ export const createCheckoutSessionService = (checkoutData, token) =>
   );
 
 export const createOrderFromSessionService = (sessionId, token) =>
-  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/create-order-from-session`, 
+  axios.post(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/create-order-from-session`, 
     { sessionId }, 
     {
       headers: {
@@ -124,7 +124,7 @@ export const createOrderFromSessionService = (sessionId, token) =>
 
 // DEPRECATED - Use createCheckoutSessionService instead
 // export const createPaymentIntentService = (paymentData, token) =>
-//   axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/create-payment-intent`, 
+//   axios.post(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/create-payment-intent`, 
 //     paymentData, 
 //     {
 //       headers: {
@@ -135,7 +135,7 @@ export const createOrderFromSessionService = (sessionId, token) =>
 
 // DEPRECATED - Use createCheckoutSessionService instead
 // export const createPaymentIntentLegacyService = (orderId, token) =>
-//   axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/create-intent`, 
+//   axios.post(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/create-intent`, 
 //     { orderId }, 
 //     {
 //       headers: {
@@ -146,7 +146,7 @@ export const createOrderFromSessionService = (sessionId, token) =>
 
 // DEPRECATED - Use Stripe webhooks instead
 // export const confirmPaymentService = (paymentIntentId, token) =>
-//   axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/confirm`, 
+//   axios.post(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/confirm`, 
 //     { paymentIntentId }, 
 //     {
 //       headers: {
@@ -157,7 +157,7 @@ export const createOrderFromSessionService = (sessionId, token) =>
 
 // Order Services (DEPRECATED - Use createCheckoutSessionService instead)
 // export const createOrderService = (orderData, token) =>
-//   axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/create-order`, 
+//   axios.post(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/create-order`, 
 //     orderData, 
 //     {
 //       headers: {
@@ -167,7 +167,7 @@ export const createOrderFromSessionService = (sessionId, token) =>
 //   );
 
 export const getUserOrdersService = (token, params = {}) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/orders`, 
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/orders`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -180,7 +180,7 @@ export const getUserOrdersService = (token, params = {}) =>
 
 // Admin Order Services
 export const getAdminOrdersService = (token, params = {}) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/admin/orders`, 
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/admin/orders`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -190,7 +190,7 @@ export const getAdminOrdersService = (token, params = {}) =>
   );
 
 export const updateOrderStatusService = (orderId, statusData, token) =>
-  axios.put(`${process.env.REACT_APP_URL || "http://localhost:5000/api"}/admin/orders/${orderId}/status`, 
+  axios.put(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/admin/orders/${orderId}/status`, 
     statusData, 
     {
       headers: {
@@ -200,7 +200,7 @@ export const updateOrderStatusService = (orderId, statusData, token) =>
   );
 
 export const updateOrderPaymentStatusService = (orderId, paymentStatusData, token) =>
-  axios.put(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/admin/orders/${orderId}/payment-status`, 
+  axios.put(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/admin/orders/${orderId}/payment-status`, 
     paymentStatusData, 
     {
       headers: {
@@ -212,7 +212,7 @@ export const updateOrderPaymentStatusService = (orderId, paymentStatusData, toke
 // Address Services
 export const getUserAddressService = (token) => {
   console.log('🏠 API: getUserAddressService called with token:', token ? 'present' : 'missing');
-  return axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/address`, 
+  return axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/auth/address`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -222,7 +222,7 @@ export const getUserAddressService = (token) => {
 };
 
 export const updateAddressService = (addressData, token) =>
-  axios.put(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/auth/address`, 
+  axios.put(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/auth/address`, 
     addressData, 
     {
       headers: {
@@ -233,7 +233,7 @@ export const updateAddressService = (addressData, token) =>
 
 // Message Services
 export const getOrderMessagesService = (orderId, token) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/messages/order/${orderId}`, 
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/messages/order/${orderId}`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -242,7 +242,7 @@ export const getOrderMessagesService = (orderId, token) =>
   );
 
 export const getUnreadMessageCountService = (token) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/messages/unread-count`, 
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/messages/unread-count`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -251,7 +251,7 @@ export const getUnreadMessageCountService = (token) =>
   );
 
 export const markMessagesAsReadService = (messageIds, token) =>
-  axios.put(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/messages/mark-read`, 
+  axios.put(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/messages/mark-read`, 
     { messageIds }, 
     {
       headers: {
@@ -261,7 +261,7 @@ export const markMessagesAsReadService = (messageIds, token) =>
   );
 
 export const sendMessageService = (messageData, token) =>
-  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/messages/send`, 
+  axios.post(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/messages/send`, 
     messageData, 
     {
       headers: {
@@ -272,7 +272,7 @@ export const sendMessageService = (messageData, token) =>
 
 // Review Services
 export const createReviewService = (reviewData, token) =>
-  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews`, 
+  axios.post(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/reviews`, 
     reviewData, 
     {
       headers: {
@@ -282,12 +282,12 @@ export const createReviewService = (reviewData, token) =>
   );
 
 export const getProductReviewsService = (productId, params = {}) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/product/${productId}`, 
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/reviews/product/${productId}`, 
     { params }
   );
 
 export const getUserReviewsService = (token, params = {}) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/user`, 
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/reviews/user`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -297,7 +297,7 @@ export const getUserReviewsService = (token, params = {}) =>
   );
 
 export const canUserReviewService = (productId, orderId, token) =>
-  axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/can-review/${productId}/${orderId}`, 
+  axios.get(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/reviews/can-review/${productId}/${orderId}`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -306,7 +306,7 @@ export const canUserReviewService = (productId, orderId, token) =>
   );
 
 export const updateReviewService = (reviewId, reviewData, token) =>
-  axios.put(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/${reviewId}`, 
+  axios.put(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/reviews/${reviewId}`, 
     reviewData, 
     {
       headers: {
@@ -316,7 +316,7 @@ export const updateReviewService = (reviewId, reviewData, token) =>
   );
 
 export const deleteReviewService = (reviewId, token) =>
-  axios.delete(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/${reviewId}`, 
+  axios.delete(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/reviews/${reviewId}`, 
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -325,7 +325,7 @@ export const deleteReviewService = (reviewId, token) =>
   );
 
 export const markReviewHelpfulService = (reviewId, token) =>
-  axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/reviews/${reviewId}/helpful`, 
+  axios.post(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/reviews/${reviewId}/helpful`, 
     {}, 
     {
       headers: {

@@ -23,7 +23,7 @@ const AdminDashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/dashboard', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/admin/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -33,7 +33,7 @@ const ChatModal = ({ isOpen, onClose, orderId, orderNumber, customerName, orderD
   useEffect(() => {
     if (isOpen && orderId) {
       console.log('🔌 Initializing socket connection for order:', orderId);
-      const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000');
+      const newSocket = io(process.env.REACT_APP_API_URL || 'https://shirlyblack.onrender.com');
       setSocket(newSocket);
 
       // Join order room

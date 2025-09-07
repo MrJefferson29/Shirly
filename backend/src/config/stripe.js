@@ -26,7 +26,7 @@ const stripeConfig = {
   
   // Payment confirmation
   confirm: true,
-  return_url: `${process.env.FRONTEND_URL}/payment/success`,
+  return_url: `${process.env.FRONTEND_URL || 'https://shirly-kappa.vercel.app'}/payment/success`,
   
   // Metadata
   metadata: {

@@ -116,7 +116,7 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/products', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/admin/products`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -175,15 +175,15 @@ const AdminProducts = () => {
           formDataToSend.append(key, formData[key]);
         }
       });
-
+      
       // Add images
       selectedImages.forEach((image, index) => {
         formDataToSend.append('images', image);
       });
 
       const url = editingProduct 
-        ? `http://localhost:5000/api/admin/products/${editingProduct._id}`
-        : 'http://localhost:5000/api/admin/products';
+        ? `${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/admin/products/${editingProduct._id}`
+        : `${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/admin/products`;
       
       const method = editingProduct ? 'PUT' : 'POST';
 
@@ -275,7 +275,7 @@ const AdminProducts = () => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/products/${productId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/admin/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -297,7 +297,7 @@ const AdminProducts = () => {
 
   const toggleProductStatus = async (productId, currentStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/products/${productId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/admin/products/${productId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -370,25 +370,25 @@ const AdminProducts = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div>
+          <div>
               <h1 className="text-4xl md:text-5xl font-light text-black mb-2">
                 Product <span className="font-semibold">Management</span>
               </h1>
               <p className="text-xl text-gray-600 leading-relaxed">
                 Manage your product inventory with ease
               </p>
-            </div>
-            <button
-              onClick={() => {
-                setShowAddForm(true);
-                setEditingProduct(null);
+          </div>
+          <button
+            onClick={() => {
+              setShowAddForm(true);
+              setEditingProduct(null);
                 resetForm();
               }}
               className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors font-semibold"
             >
               <HiOutlinePlus className="w-5 h-5" />
-              Add Product
-            </button>
+            Add Product
+          </button>
           </div>
         </div>
 
@@ -507,7 +507,7 @@ const AdminProducts = () => {
                 >
                   <HiOutlineXCircle className="w-6 h-6 text-gray-600" />
                 </button>
-              </div>
+            </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Information */}
@@ -545,8 +545,8 @@ const AdminProducts = () => {
                     required
                     rows={3}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                  />
-                </div>
+                    />
+                  </div>
 
                 {/* Category and Pricing */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -568,29 +568,29 @@ const AdminProducts = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Price (₹)</label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      required
+                      <input
+                        type="number"
+                        name="price"
+                        value={formData.price}
+                        onChange={handleInputChange}
+                        required
                       min="0"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                    />
-                  </div>
+                      />
+                    </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Sale Price (₹) <span className="text-gray-500 font-normal">(Optional)</span></label>
-                    <input
-                      type="number"
-                      name="newPrice"
-                      value={formData.newPrice}
-                      onChange={handleInputChange}
+                      <input
+                        type="number"
+                        name="newPrice"
+                        value={formData.newPrice}
+                        onChange={handleInputChange}
                       min="0"
                       placeholder="Leave empty if no sale price"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                    />
+                      />
+                    </div>
                   </div>
-                </div>
 
                 {/* Quantity and Status */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -617,30 +617,30 @@ const AdminProducts = () => {
                       />
                       <span className="ml-2 text-sm font-semibold text-gray-700">Trending Product</span>
                     </label>
-                  </div>
                 </div>
+              </div>
 
-                {/* Form Actions */}
-                <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAddForm(false);
-                      setEditingProduct(null);
+              {/* Form Actions */}
+              <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditingProduct(null);
                       resetForm();
-                    }}
+                  }}
                     className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
                     className="px-8 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold"
-                  >
+                >
                     {editingProduct ? 'Update Product' : 'Add Product'}
-                  </button>
-                </div>
-              </form>
+                </button>
+              </div>
+            </form>
             </div>
           </div>
         )}
@@ -690,8 +690,8 @@ const AdminProducts = () => {
                           Trending
                         </span>
                       )}
-                    </div>
-                  </div>
+          </div>
+                        </div>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => toggleProductStatus(product._id, product.isActive)}
@@ -704,8 +704,8 @@ const AdminProducts = () => {
                     >
                       {product.isActive ? <HiOutlineEye className="w-4 h-4" /> : <HiOutlineEyeOff className="w-4 h-4" />}
                     </button>
-                  </div>
-                </div>
+                        </div>
+                      </div>
 
                 {product.images && product.images.length > 0 && (
                   <div className="mb-4">
@@ -726,7 +726,7 @@ const AdminProducts = () => {
                     <span className="text-gray-600">Price:</span>
                     <span className="font-medium text-black">₹{product.price}</span>
                   </div>
-                  {product.newPrice && product.newPrice < product.price && (
+                        {product.newPrice && product.newPrice < product.price && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Sale Price:</span>
                       <span className="font-medium text-green-600">₹{product.newPrice}</span>
@@ -740,30 +740,30 @@ const AdminProducts = () => {
                     <span className="text-gray-600">Rating:</span>
                     <span className="font-medium text-black">{product.rating || 0}/5</span>
                   </div>
-                </div>
+                      </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleEdit(product)}
+                      <button
+                        onClick={() => handleEdit(product)}
                       className="flex items-center gap-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
+                      >
                       <HiOutlinePencil className="w-4 h-4" />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product._id)}
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product._id)}
                       className="flex items-center gap-1 px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                    >
+                      >
                       <HiOutlineTrash className="w-4 h-4" />
-                      Delete
-                    </button>
+                        Delete
+                      </button>
                   </div>
                   <span className="text-xs text-gray-500">
                     {new Date(product.createdAt).toLocaleDateString()}
                   </span>
-                </div>
-              </div>
+          </div>
+        </div>
             ))}
           </div>
         )}

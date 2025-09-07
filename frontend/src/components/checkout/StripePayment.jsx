@@ -31,7 +31,7 @@ const CheckoutForm = ({ orderId, onPaymentSuccess, onPaymentError }) => {
     // Load payment methods info
     const loadPaymentMethods = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/payments/methods`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api"}/payments/methods`);
         const data = await response.json();
         if (data.success) {
           setPaymentMethods(data.data.paymentMethods);

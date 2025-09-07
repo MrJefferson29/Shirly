@@ -1,4 +1,4 @@
-const baseUrl = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const baseUrl = process.env.REACT_APP_API_URL || "https://shirlyblack.onrender.com/api";
 
 //auth url
 export const SIGNUP_URL = `${baseUrl}/auth/signup`;
