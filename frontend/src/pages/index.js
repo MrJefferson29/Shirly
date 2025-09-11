@@ -17,6 +17,11 @@ export { default as PaymentSuccess } from "./PaymentSuccess";
 export { default as CustomerChat } from "./CustomerChat";
 
 export { default as ErrorPage } from "./ErrorPage";
+export { default as WarrantySupport } from "./WarrantySupport";
+export { default as ContactUs } from "./ContactUs";
+export { default as ShippingInfo } from "./ShippingInfo";
+export { default as ReturnsExchanges } from "./ReturnsExchanges";
+export { default as PaymentOptions } from "./PaymentOptions";
 
 // Admin pages
 export { default as AdminDashboard } from "./AdminDashboard";

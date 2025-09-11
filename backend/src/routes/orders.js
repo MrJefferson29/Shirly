@@ -90,7 +90,7 @@ router.post('/', createOrderValidation, async (req, res) => {
       });
     }
 
-    const shippingCost = totalAmount > 1000 ? 0 : 100; // Free shipping above ₹1000
+    const shippingCost = totalAmount > 50 ? 0 : 5; // Free shipping above $50
     const finalAmount = totalAmount + shippingCost;
 
     // Create order

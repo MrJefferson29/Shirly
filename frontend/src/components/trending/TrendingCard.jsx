@@ -45,9 +45,9 @@ const TrendingCard = ({ product }) => {
             {/* Right Column - Price */}
             <div className="text-right">
               <div className="flex flex-col items-end">
-                <span className="text-base sm:text-lg font-bold text-white">₹{product.newPrice || product.price}</span>
+                <span className="text-base sm:text-lg font-bold text-white">${product.newPrice || product.price}</span>
                 {product.newPrice && product.newPrice < product.price && (
-                  <span className="text-xs sm:text-sm text-gray-300 line-through">₹{product.price}</span>
+                  <span className="text-xs sm:text-sm text-gray-300 line-through">${product.price}</span>
                 )}
               </div>
             </div>

@@ -1,5 +1,5 @@
 const express = require('express');
-const { body } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 const { protect, authorize } = require('../middleware/auth');
 const { 
   uploadProductImages, 
@@ -34,7 +34,7 @@ const productValidation = [
     .notEmpty()
     .withMessage('Brand is required'),
   body('category')
-    .isIn(['Vision', 'Sports', 'Sunglasses'])
+    .isIn(['sunglasses', 'eyeglasses', 'sports', 'vision'])
     .withMessage('Invalid category'),
   body('gender')
     .isIn(['Men', 'Women', 'Unisex'])
@@ -43,6 +43,7 @@ const productValidation = [
     .isFloat({ min: 0 })
     .withMessage('Price must be a positive number'),
   body('newPrice')
+    .optional()
     .isFloat({ min: 0 })
     .withMessage('New price must be a positive number'),
   body('quantity')
@@ -223,11 +224,53 @@ router.get('/products', async (req, res) => {
 // @access  Private (Admin)
 router.post('/products', uploadProductImages.array('images', 5), productValidation, handleCloudinaryUploadError, async (req, res) => {
   try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
     const productData = req.body;
     
     // Handle uploaded images - Cloudinary returns secure_url
     if (req.files && req.files.length > 0) {
       productData.images = req.files.map(file => file.path); // file.path contains the Cloudinary URL
+    } else {
+      // If no images uploaded, return validation error
+      return res.status(400).json({
+        success: false,
+        message: 'At least one product image is required'
+      });
+    }
+
+    // Parse JSON fields
+    if (productData.dimensions) {
+      try {
+        productData.dimensions = JSON.parse(productData.dimensions);
+      } catch (error) {
+        console.error('Error parsing dimensions:', error);
+      }
+    }
+
+    if (productData.specifications) {
+      try {
+        productData.specifications = JSON.parse(productData.specifications);
+      } catch (error) {
+        console.error('Error parsing specifications:', error);
+      }
+    }
+
+    // Handle features and tags arrays
+    if (productData.features && typeof productData.features === 'string') {
+      productData.features = productData.features.split(',').map(f => f.trim()).filter(f => f);
+    }
+
+    if (productData.tags && typeof productData.tags === 'string') {
+      productData.tags = productData.tags.split(',').map(t => t.trim()).filter(t => t);
     }
 
     const product = await Product.create(productData);
@@ -241,9 +284,20 @@ router.post('/products', uploadProductImages.array('images', 5), productValidati
     });
   } catch (error) {
     console.error('Create product error:', error);
+    
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'Server error while creating product'
     });
   }
 });

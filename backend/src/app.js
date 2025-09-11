@@ -12,7 +12,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "https://shirly-kappa.vercel.app",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST"]
   }
 });
@@ -33,8 +33,7 @@ app.use(limiter);
 // CORS configuration
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'https://shirly-kappa.vercel.app',
-    'https://shirly-kappa.vercel.app',
+    process.env.FRONTEND_URL || 'http://localhost:3000',
     'http://localhost:3000',
     'http://127.0.0.1:3000'
   ],

@@ -141,9 +141,9 @@ const SingleProduct = ({ product }) => {
         {/* Price Section */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-xl font-bold text-gray-900">₹{product.newPrice || product.price}</span>
+            <span className="text-xl font-bold text-gray-900">${product.newPrice || product.price}</span>
             {product.newPrice && product.newPrice < product.price && (
-              <span className="text-sm text-gray-400 line-through">₹{product.price}</span>
+              <span className="text-sm text-gray-400 line-through">${product.price}</span>
             )}
           </div>
           

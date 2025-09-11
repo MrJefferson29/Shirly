@@ -14,8 +14,10 @@ import {
   HiOutlineShieldCheck,
   HiOutlineTruck,
   HiOutlineRefresh,
-  HiOutlineEye,
+  HiOutlineShoppingBag,
   HiOutlineHeart,
+  HiOutlineUser,
+  HiOutlineCreditCard,
 } from "react-icons/hi";
 import { BiMessage } from "react-icons/bi";
 
@@ -32,20 +34,20 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mr-4">
-                <HiOutlineEye className="text-black text-xl" />
+                <HiOutlineShoppingBag className="text-black text-xl" />
               </div>
               <h3 className="text-3xl font-light text-white tracking-wide">ShirlyBlack</h3>
             </div>
             <p className="text-gray-300 mb-8 leading-relaxed text-base max-w-md">
-              Elevating vision with sophisticated eyewear that seamlessly blends fashion, 
-              function, and healthcare excellence. Discover your perfect frame.
+              Your premier destination for quality products and exceptional shopping experience. 
+              Discover a world of carefully curated items at unbeatable prices.
             </p>
             
             {/* Contact Info */}
             <div className="space-y-4">
               <div className="flex items-center text-gray-300">
                 <AiOutlineMail className="w-5 h-5 mr-4 text-white" />
-                <span className="text-sm font-medium">support@eyesome.com</span>
+                <span className="text-sm font-medium">support@shirlyblack.com</span>
               </div>
               <div className="flex items-center text-gray-300">
                 <AiOutlinePhone className="w-5 h-5 mr-4 text-white" />
@@ -53,93 +55,93 @@ const Footer = () => {
               </div>
               <div className="flex items-center text-gray-300">
                 <AiOutlineEnvironment className="w-5 h-5 mr-4 text-white" />
-                <span className="text-sm font-medium">123 Fashion Avenue, Style District</span>
+                <span className="text-sm font-medium">123 Commerce Street, Business District</span>
               </div>
             </div>
           </div>
 
-          {/* Collections Section */}
+          {/* Shop Section */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-6">Collections</h4>
+            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-6">Shop</h4>
             <ul className="space-y-4">
               <li>
                 <Link 
-                  to="/products?category=sunglasses" 
+                  to="/products" 
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
-                  Sunglasses
+                  All Products
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="/products?category=eyeglasses" 
+                  to="/products?category=featured" 
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
-                  Prescription Glasses
+                  Featured Items
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="/products?category=sports" 
+                  to="/products?category=new" 
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
-                  Sports Eyewear
+                  New Arrivals
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="/products?category=reading" 
+                  to="/products?category=sale" 
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
-                  Reading Glasses
+                  Sale Items
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="/products?category=blue-light" 
+                  to="/products?category=trending" 
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
-                  Blue Light Protection
+                  Trending Now
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Healthcare & Services */}
+          {/* Customer Service */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-6">Healthcare</h4>
+            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-6">Customer Service</h4>
             <ul className="space-y-4">
               <li>
                 <Link 
-                  to="/eye-exam" 
+                  to="/profile" 
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium flex items-center"
                 >
-                  <HiOutlineEye className="w-4 h-4 mr-3" />
-                  Eye Examination
+                  <HiOutlineUser className="w-4 h-4 mr-3" />
+                  My Account
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="/prescription" 
+                  to="/orders" 
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
-                  Prescription Services
+                  Order History
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="/lens-options" 
+                  to="/wishlist" 
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
-                  Lens Options
+                  Wishlist
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="/frame-fitting" 
+                  to="/chat" 
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
-                  Frame Fitting
+                  Track Order
                 </Link>
               </li>
               <li>
@@ -148,7 +150,7 @@ const Footer = () => {
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium flex items-center"
                 >
                   <HiOutlineShieldCheck className="w-4 h-4 mr-3" />
-                  Warranty & Care
+                  Warranty & Support
                 </Link>
               </li>
             </ul>
@@ -182,15 +184,16 @@ const Footer = () => {
                   className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium flex items-center"
                 >
                   <HiOutlineRefresh className="w-4 h-4 mr-3" />
-                  Returns
+                  Returns & Exchanges
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="/size-guide" 
-                  className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
+                  to="/payment-options" 
+                  className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium flex items-center"
                 >
-                  Size Guide
+                  <HiOutlineCreditCard className="w-4 h-4 mr-3" />
+                  Payment Options
                 </Link>
               </li>
             </ul>
@@ -199,7 +202,7 @@ const Footer = () => {
             <div className="mb-6">
               <h5 className="text-sm font-semibold text-white uppercase tracking-wider mb-3">Stay Updated</h5>
               <p className="text-gray-300 text-xs mb-3 leading-relaxed">
-                Get the latest in eyewear fashion and eye health tips.
+                Get the latest deals, new arrivals, and exclusive offers.
               </p>
               <div className="flex w-full max-w-sm">
                 <input

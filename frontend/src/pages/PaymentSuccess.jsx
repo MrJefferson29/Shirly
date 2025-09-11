@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext, useCartContext } from '../contexts';
 import { notify } from '../utils/utils';
@@ -10,6 +10,8 @@ const PaymentSuccess = () => {
   const { token } = useAuthContext();
   const { clearCart } = useCartContext();
   const [loading, setLoading] = useState(true);
+  const hasProcessedRef = useRef(false);
+  const processedSessionRef = useRef(null);
 
   useEffect(() => {
     const handlePaymentSuccess = async () => {
@@ -17,10 +19,18 @@ const PaymentSuccess = () => {
       const urlParams = new URLSearchParams(location.search);
       const sessionId = urlParams.get('session_id');
 
+      // Prevent multiple executions for the same session
+      if (hasProcessedRef.current || processedSessionRef.current === sessionId) {
+        return;
+      }
+
       if (sessionId) {
         try {
+          hasProcessedRef.current = true;
+          processedSessionRef.current = sessionId;
+          
           // Handle Stripe checkout session success
-          notify('success', 'Payment successful! Processing your order...');
+          notify('success', 'Payment successful! Processing your order...', 0);
           
           // Clear the cart since payment was successful
           clearCart();
@@ -59,7 +69,7 @@ const PaymentSuccess = () => {
     };
 
     handlePaymentSuccess();
-  }, [location, navigate, clearCart, token]);
+  }, [location.search, navigate, clearCart, token]);
 
   if (loading) {
     return (

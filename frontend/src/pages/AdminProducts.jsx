@@ -54,6 +54,7 @@ const AdminProducts = () => {
   });
 
   const [selectedImages, setSelectedImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
 
   useEffect(() => {
     if (userInfo?.role !== 'admin') {
@@ -157,20 +158,67 @@ const AdminProducts = () => {
     }
   };
 
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Validate file types
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+      notify('error', 'Please select only image files (JPEG, PNG, WebP)');
+      return;
+    }
+    
+    // Validate file sizes (max 5MB per file)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const oversizedFiles = files.filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      notify('error', 'Image files must be smaller than 5MB');
+      return;
+    }
+    
+    // Validate total number of images (max 5)
+    if (selectedImages.length + files.length > 5) {
+      notify('error', 'Maximum 5 images allowed per product');
+      return;
+    }
+    
+    setSelectedImages(prev => [...prev, ...files]);
+  };
+
+  const handleImageRemove = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate that at least one image is available (either existing or new)
+    if (selectedImages.length === 0 && existingImages.length === 0) {
+      notify('error', 'Please select at least one product image');
+      return;
+    }
+    
     try {
       const formDataToSend = new FormData();
       
-      // Add all form fields
+      // Add all form fields (excluding images which are handled separately)
       Object.keys(formData).forEach(key => {
-        if (key === 'dimensions' || key === 'specifications') {
+        if (key === 'images') {
+          // Skip images field - it's handled separately with selectedImages
+          return;
+        } else if (key === 'dimensions' || key === 'specifications') {
           formDataToSend.append(key, JSON.stringify(formData[key]));
         } else if (key === 'newPrice') {
           // Only add newPrice if it has a value, otherwise skip it
           if (formData[key] && formData[key].trim() !== '') {
-            formDataToSend.append(key, formData[key]);
+            formDataToSend.append(key, parseFloat(formData[key]));
           }
+        } else if (key === 'price' || key === 'quantity') {
+          // Parse numeric fields
+          formDataToSend.append(key, parseFloat(formData[key]));
         } else {
           formDataToSend.append(key, formData[key]);
         }
@@ -202,7 +250,14 @@ const AdminProducts = () => {
         resetForm();
         fetchProducts();
       } else {
-        notify('error', 'Error saving product');
+        const errorData = await response.json();
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          // Handle validation errors
+          const errorMessages = errorData.errors.map(err => err.msg || err.message).join(', ');
+          notify('error', `Validation failed: ${errorMessages}`);
+        } else {
+          notify('error', errorData.message || 'Error saving product');
+        }
       }
     } catch (error) {
       console.error('Submit error:', error);
@@ -231,10 +286,13 @@ const AdminProducts = () => {
       specifications: {}
     });
     setSelectedImages([]);
+    setExistingImages([]);
   };
 
   const handleEdit = (product) => {
     setEditingProduct(product);
+    setExistingImages(product.images || []);
+    setSelectedImages([]);
     setFormData({
       name: product.name,
       description: product.description,
@@ -567,7 +625,7 @@ const AdminProducts = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Price (₹)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Price ($)</label>
                       <input
                         type="number"
                         name="price"
@@ -575,17 +633,19 @@ const AdminProducts = () => {
                         onChange={handleInputChange}
                         required
                       min="0"
+                      step="0.01"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                       />
                     </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Sale Price (₹) <span className="text-gray-500 font-normal">(Optional)</span></label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Sale Price ($) <span className="text-gray-500 font-normal">(Optional)</span></label>
                       <input
                         type="number"
                         name="newPrice"
                         value={formData.newPrice}
                         onChange={handleInputChange}
                       min="0"
+                      step="0.01"
                       placeholder="Leave empty if no sale price"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                       />
@@ -618,6 +678,98 @@ const AdminProducts = () => {
                       <span className="ml-2 text-sm font-semibold text-gray-700">Trending Product</span>
                     </label>
                 </div>
+              </div>
+
+              {/* Image Upload Section */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Product Images <span className="text-red-500">*</span>
+                  </label>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Upload up to 5 images (JPEG, PNG, WebP). Maximum 5MB per image.
+                  </p>
+                  
+                  {/* File Input */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="cursor-pointer flex flex-col items-center"
+                    >
+                      <HiOutlinePlus className="w-8 h-8 text-gray-400 mb-2" />
+                      <span className="text-sm font-medium text-gray-700">
+                        Click to upload images
+                      </span>
+                      <span className="text-xs text-gray-500 mt-1">
+                        or drag and drop
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Existing Images (Edit Mode) */}
+                {editingProduct && existingImages.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                      Current Images ({existingImages.length})
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                      {existingImages.map((imageUrl, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={imageUrl}
+                            alt={`Current ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                          />
+                          <div className="absolute bottom-0 left-0 right-0 bg-blue-600 bg-opacity-75 text-white text-xs p-1 rounded-b-lg text-center">
+                            Current Image
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Image Preview */}
+                {selectedImages.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                      New Images ({selectedImages.length}/5)
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                      {selectedImages.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={URL.createObjectURL(image)}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleImageRemove(index)}
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                          >
+                            <HiOutlineXCircle className="w-4 h-4" />
+                          </button>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg">
+                            {image.name.length > 15 
+                              ? `${image.name.substring(0, 15)}...` 
+                              : image.name
+                            }
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Form Actions */}
@@ -724,12 +876,12 @@ const AdminProducts = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Price:</span>
-                    <span className="font-medium text-black">₹{product.price}</span>
+                    <span className="font-medium text-black">${product.price}</span>
                   </div>
                         {product.newPrice && product.newPrice < product.price && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Sale Price:</span>
-                      <span className="font-medium text-green-600">₹{product.newPrice}</span>
+                      <span className="font-medium text-green-600">${product.newPrice}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">

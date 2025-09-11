@@ -109,10 +109,10 @@ const CartItemCard = ({ product, isSearch, setSearch }) => {
             )}
         </div>
         <div className="flex flex-col items-end">
-          <span className="text-lg font-semibold text-gray-900">₹{product.newPrice}</span>
+          <span className="text-lg font-semibold text-gray-900">${product.newPrice}</span>
           {product.newPrice && product.newPrice < product.price && (
             <span className="text-sm line-through text-gray-500">
-              ₹{product.price}
+              ${product.price}
             </span>
           )}
         </div>

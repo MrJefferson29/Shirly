@@ -388,7 +388,7 @@ const CustomerChat = () => {
 
                 <div className="mb-4">
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Total:</span> ₹{order.totalAmount}
+                    <span className="font-medium">Total:</span> ${order.totalAmount}
                   </p>
                   <p className="text-sm text-gray-600">
                     <span className="font-medium">Items:</span> {order.products?.length || order.items?.length || 0} item{(order.products?.length || order.items?.length || 0) !== 1 ? 's' : ''}
@@ -411,7 +411,7 @@ const CustomerChat = () => {
                           )}
                           <div>
                             <div className="text-sm font-semibold text-black">{item.product?.name || 'Unknown Product'}</div>
-                            <div className="text-xs text-gray-600">Qty: {item.quantity} • ₹{item.product?.price || item.price}</div>
+                            <div className="text-xs text-gray-600">Qty: {item.quantity} • ${item.product?.price || item.price}</div>
                           </div>
                         </div>
                         {order.status === 'delivered' && (

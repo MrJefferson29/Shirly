@@ -20,7 +20,7 @@ const NewStripeModal = ({ showModal, setShowModal }) => {
   console.log('🔍 NewStripeModal render - userAddress keys:', userAddress ? Object.keys(userAddress) : 'undefined');
 
   const handlePaymentSuccess = (orderData) => {
-    notify("success", "Payment successful! Your order has been confirmed.");
+    // Don't show notification here since PaymentSuccess page will handle it
     clearCart();
     setShowModal(false);
     navigate("/payment/success", { 

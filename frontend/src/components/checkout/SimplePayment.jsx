@@ -96,6 +96,8 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
 
       console.log('📋 Current address being sent:', currentAddress);
       console.log('📋 Current address JSON:', JSON.stringify(currentAddress, null, 2));
+      console.log('💳 Selected payment method:', selectedPaymentMethod);
+      console.log('💳 Payment method type:', typeof selectedPaymentMethod);
 
       // Create checkout session with Stripe
       const response = await createCheckoutSessionService(

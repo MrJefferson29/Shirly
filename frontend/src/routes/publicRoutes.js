@@ -1,4 +1,4 @@
-import { Login, ProductDetails, ProductListing, Signup, PaymentSuccess } from "../pages";
+import { Login, ProductDetails, ProductListing, Signup, PaymentSuccess, WarrantySupport, ContactUs, ShippingInfo, ReturnsExchanges, PaymentOptions } from "../pages";
 
 const authRoutes = [
   {
@@ -25,6 +25,26 @@ const contentRoutes = [
   {
     path: "/payment/success",
     element: <PaymentSuccess />,
+  },
+  {
+    path: "/warranty",
+    element: <WarrantySupport />,
+  },
+  {
+    path: "/contact",
+    element: <ContactUs />,
+  },
+  {
+    path: "/shipping",
+    element: <ShippingInfo />,
+  },
+  {
+    path: "/returns",
+    element: <ReturnsExchanges />,
+  },
+  {
+    path: "/payment-options",
+    element: <PaymentOptions />,
   },
 ];
 export { authRoutes, contentRoutes };

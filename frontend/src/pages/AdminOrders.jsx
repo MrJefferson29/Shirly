@@ -3,7 +3,20 @@ import { useAuthContext } from '../contexts';
 import { notify } from '../utils/utils';
 import { getAdminOrdersService, updateOrderStatusService } from '../api/apiServices';
 import ChatModal from '../components/chat/ChatModal';
-import { HiOutlineChat } from 'react-icons/hi';
+import { 
+  HiOutlineChat, 
+  HiOutlineClipboardList, 
+  HiOutlineClock, 
+  HiOutlineCheckCircle, 
+  HiOutlineCurrencyDollar,
+  HiOutlineFilter,
+  HiOutlineDownload,
+  HiOutlineSearch,
+  HiOutlineEye,
+  HiOutlineEyeOff,
+  HiOutlineRefresh,
+  HiOutlineX
+} from 'react-icons/hi';
 
 const AdminOrders = () => {
   const { token, userInfo } = useAuthContext();
@@ -291,19 +304,32 @@ const AdminOrders = () => {
   return (
     <div className="min-h-screen bg-[--theme-color] py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[--primary-text-color]">Order Management</h1>
-          <p className="mt-2 text-[--secondary-text-color]">Manage customer orders and track their status</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-[--primary-text-color] flex items-center gap-3">
+                <HiOutlineClipboardList className="text-amber-600" />
+                Order Management
+              </h1>
+              <p className="mt-2 text-[--secondary-text-color]">Manage customer orders and track their status</p>
+            </div>
+            <button
+              onClick={fetchOrders}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+            >
+              <HiOutlineRefresh />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {/* Order Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="card p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="card p-6 hover:shadow-lg transition-shadow duration-200">
             <div className="flex items-center">
               <div className="p-3 bg-amber-100 rounded-lg">
-                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+                <HiOutlineClipboardList className="w-6 h-6 text-amber-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-[--secondary-text-color]">Total Orders</p>
@@ -312,12 +338,10 @@ const AdminOrders = () => {
             </div>
           </div>
           
-          <div className="card p-6">
+          <div className="card p-6 hover:shadow-lg transition-shadow duration-200">
             <div className="flex items-center">
               <div className="p-3 bg-orange-100 rounded-lg">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <HiOutlineClock className="w-6 h-6 text-orange-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-[--secondary-text-color]">Pending</p>
@@ -328,12 +352,10 @@ const AdminOrders = () => {
             </div>
           </div>
           
-          <div className="card p-6">
+          <div className="card p-6 hover:shadow-lg transition-shadow duration-200">
             <div className="flex items-center">
               <div className="p-3 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <HiOutlineCheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-[--secondary-text-color]">Completed</p>
@@ -344,12 +366,10 @@ const AdminOrders = () => {
             </div>
           </div>
           
-          <div className="card p-6">
+          <div className="card p-6 hover:shadow-lg transition-shadow duration-200">
             <div className="flex items-center">
               <div className="p-3 bg-amber-200 rounded-lg">
-                <svg className="w-6 h-6 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
+                <HiOutlineCurrencyDollar className="w-6 h-6 text-amber-800" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-[--secondary-text-color]">Total Revenue</p>
@@ -363,19 +383,24 @@ const AdminOrders = () => {
 
         {/* Filter Controls */}
         <div className="card mb-6 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-[--primary-text-color]">Filters & Search</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-[--primary-text-color] flex items-center gap-2">
+              <HiOutlineFilter className="text-amber-600" />
+              Filters & Search
+            </h3>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className="px-3 py-1 text-sm bg-amber-100 text-amber-800 rounded-md hover:bg-amber-200 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-amber-100 text-amber-800 rounded-md hover:bg-amber-200 transition-colors"
               >
+                {showAdvancedFilters ? <HiOutlineEyeOff /> : <HiOutlineEye />}
                 {showAdvancedFilters ? 'Hide' : 'Show'} Advanced
               </button>
               <button
                 onClick={clearAllFilters}
-                className="px-3 py-1 text-sm bg-[--primary-text-color] text-white rounded-md hover:bg-gray-800 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-[--primary-text-color] text-white rounded-md hover:bg-gray-800 transition-colors"
               >
+                <HiOutlineX />
                 Clear All
               </button>
             </div>
@@ -383,14 +408,20 @@ const AdminOrders = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[--primary-text-color] mb-2">Search Orders</label>
-              <input
-                type="text"
-                placeholder="Search by order #, customer, or product..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color] placeholder-[--secondary-text-color]"
-              />
+              <label className="block text-sm font-medium text-[--primary-text-color] mb-2 flex items-center gap-2">
+                <HiOutlineSearch className="text-amber-600" />
+                Search Orders
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by order #, customer, or product..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color] placeholder-[--secondary-text-color]"
+                />
+                <HiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[--secondary-text-color] w-4 h-4" />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-[--primary-text-color] mb-2">Order Status</label>
@@ -471,35 +502,39 @@ const AdminOrders = () => {
           )}
           
           {/* Bulk Actions */}
-          <div className="mt-4 pt-4 border-t border-black/[0.1]">
+          <div className="mt-6 pt-4 border-t border-black/[0.1]">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-[--primary-text-color]">Bulk Actions:</span>
-              <select
+                <span className="text-sm font-medium text-[--primary-text-color] flex items-center gap-2">
+                  <HiOutlineClipboardList className="text-amber-600" />
+                  Bulk Actions:
+                </span>
+                <select
                   className="px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color]"
-                onChange={(e) => {
-                  if (e.target.value) {
-                      handleBulkAction(e.target.value);
-                      e.target.value = ''; // Reset selection
-                  }
-                }}
-              >
-                <option value="">Select Action</option>
-                <option value="mark-confirmed">Mark as Confirmed</option>
-                <option value="mark-shipped">Mark as Shipped</option>
-                <option value="mark-delivered">Mark as Delivered</option>
+                  onChange={(e) => {
+                    if (e.target.value) {
+                        handleBulkAction(e.target.value);
+                        e.target.value = ''; // Reset selection
+                    }
+                  }}
+                >
+                  <option value="">Select Action</option>
+                  <option value="mark-confirmed">Mark as Confirmed</option>
+                  <option value="mark-shipped">Mark as Shipped</option>
+                  <option value="mark-delivered">Mark as Delivered</option>
                   <option value="export-csv">Export Selected to CSV</option>
-              </select>
+                </select>
               </div>
               <div className="flex items-center gap-4">
-              <button
+                <button
                   onClick={() => exportToCSV()}
-                  className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
-              >
+                  className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+                >
+                  <HiOutlineDownload />
                   Export All to CSV
-              </button>
+                </button>
                 {selectedOrders.size > 0 && (
-                  <span className="text-sm text-[--secondary-text-color]">
+                  <span className="text-sm text-[--secondary-text-color] bg-amber-100 px-3 py-1 rounded-full">
                     {selectedOrders.size} selected
                   </span>
                 )}
@@ -509,13 +544,14 @@ const AdminOrders = () => {
         </div>
 
         {/* Orders List */}
-        <div className="card overflow-hidden">
-          <div className="px-6 py-4 border-b border-black/[0.1] bg-amber-50">
+        <div className="card overflow-hidden shadow-lg">
+          <div className="px-6 py-4 border-b border-black/[0.1] bg-gradient-to-r from-amber-50 to-orange-50">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-[--primary-text-color]">
+              <h2 className="text-lg font-medium text-[--primary-text-color] flex items-center gap-2">
+                <HiOutlineClipboardList className="text-amber-600" />
                 Orders ({filteredOrders.length})
                 {filteredOrders.length !== orders.length && (
-                  <span className="text-sm text-[--secondary-text-color] ml-2">
+                  <span className="text-sm text-[--secondary-text-color] ml-2 bg-amber-100 px-2 py-1 rounded-full">
                     (filtered from {orders.length} total)
                   </span>
                 )}
@@ -528,7 +564,7 @@ const AdminOrders = () => {
                     // This would need to be handled by parent component
                     // For now, we'll keep it as display only
                   }}
-                  className="px-2 py-1 text-sm border border-black/[0.1] rounded bg-white/[0.7] text-[--primary-text-color]"
+                  className="px-2 py-1 text-sm border border-black/[0.1] rounded bg-white/[0.7] text-[--primary-text-color] focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
                   <option value={10}>10 per page</option>
                   <option value={25}>25 per page</option>
@@ -539,7 +575,7 @@ const AdminOrders = () => {
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-black/[0.1]">
-              <thead className="bg-amber-50">
+              <thead className="bg-gradient-to-r from-amber-50 to-orange-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-[--secondary-text-color] uppercase tracking-wider">
                     <input
@@ -608,7 +644,7 @@ const AdminOrders = () => {
               <tbody className="bg-white/[0.7] divide-y divide-black/[0.1]">
                 {paginatedOrders.map((order) => (
                   <React.Fragment key={order._id}>
-                    <tr className="hover:bg-amber-50 transition-colors">
+                    <tr className="hover:bg-amber-50 transition-colors duration-200">
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
@@ -621,16 +657,12 @@ const AdminOrders = () => {
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => toggleOrderExpansion(order._id)}
-                            className="text-[--secondary-text-color] hover:text-[--primary-text-color] transition-colors"
+                            className="text-[--secondary-text-color] hover:text-amber-600 transition-colors duration-200 p-1 rounded hover:bg-amber-100"
                           >
                             {expandedOrders.has(order._id) ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
+                              <HiOutlineEyeOff className="w-4 h-4" />
                             ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
+                              <HiOutlineEye className="w-4 h-4" />
                             )}
                           </button>
                           <div>
@@ -640,7 +672,8 @@ const AdminOrders = () => {
                             <div className="text-sm text-[--secondary-text-color]">
                               {new Date(order.createdAt).toLocaleDateString()}
                             </div>
-                            <div className="text-sm font-semibold text-amber-600">
+                            <div className="text-sm font-semibold text-amber-600 flex items-center gap-1">
+                              <HiOutlineCurrencyDollar className="w-3 h-3" />
                               ${order.totalAmount}
                             </div>
                           </div>
@@ -688,7 +721,7 @@ const AdminOrders = () => {
                           <select
                             value={order.status}
                             onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                            className="text-xs border border-black/[0.1] rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500 w-full bg-white/[0.7] text-[--primary-text-color]"
+                            className="text-xs border border-black/[0.1] rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-500 w-full bg-white/[0.7] text-[--primary-text-color] hover:bg-amber-50 transition-colors"
                           >
                             <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>
@@ -704,7 +737,7 @@ const AdminOrders = () => {
                     {/* Expanded Order Details */}
                     {expandedOrders.has(order._id) && (
                       <tr>
-                        <td colSpan="6" className="px-6 py-4 bg-amber-50">
+                        <td colSpan="7" className="px-6 py-4 bg-gradient-to-r from-amber-50 to-orange-50">
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Order Details */}
                             <div>
@@ -815,7 +848,7 @@ const AdminOrders = () => {
                           </div>
 
                           {/* Message Button */}
-                          <div className="mt-4 flex justify-end">
+                          <div className="mt-6 flex justify-end">
                             <button
                               onClick={() => setChatModal({
                                 isOpen: true,
@@ -824,7 +857,7 @@ const AdminOrders = () => {
                                 customerName: order.user?.username || 'Customer',
                                 orderData: order
                               })}
-                              className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors shadow-md hover:shadow-lg"
                             >
                               <HiOutlineChat />
                               Message Customer
@@ -841,9 +874,10 @@ const AdminOrders = () => {
           
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-black/[0.1] bg-amber-50">
+            <div className="px-6 py-4 border-t border-black/[0.1] bg-gradient-to-r from-amber-50 to-orange-50">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-[--secondary-text-color]">
+                <div className="text-sm text-[--secondary-text-color] flex items-center gap-2">
+                  <HiOutlineClipboardList className="w-4 h-4" />
                   Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} orders
                 </div>
                 <div className="flex items-center gap-2">
@@ -904,15 +938,23 @@ const AdminOrders = () => {
 
         {filteredOrders.length === 0 && (
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-[--secondary-text-color]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+            <div className="mx-auto h-12 w-12 text-[--secondary-text-color] mb-4">
+              <HiOutlineClipboardList className="w-full h-full" />
+            </div>
             <h3 className="mt-2 text-sm font-medium text-[--primary-text-color]">
               {orders.length === 0 ? 'No orders' : 'No orders match your filters'}
             </h3>
             <p className="mt-1 text-sm text-[--secondary-text-color]">
               {orders.length === 0 ? 'No orders have been placed yet.' : 'Try adjusting your search criteria or clearing filters.'}
             </p>
+            {orders.length > 0 && (
+              <button
+                onClick={clearAllFilters}
+                className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+              >
+                Clear All Filters
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -16,7 +16,7 @@ const createCheckoutSessionValidation = [
   body('items')
     .isArray({ min: 1 })
     .withMessage('At least one item is required'),
-  body('items.*.productId')
+  body('items.*.product')
     .isMongoId()
     .withMessage('Valid product ID is required'),
   body('items.*.quantity')

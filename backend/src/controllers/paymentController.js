@@ -720,6 +720,9 @@ const createCheckoutSession = async (req, res) => {
     console.log('📋 Shipping address type:', typeof shippingAddress);
     console.log('📋 Shipping address keys:', shippingAddress ? Object.keys(shippingAddress) : 'undefined');
     console.log('📋 Shipping address values:', shippingAddress);
+    console.log('💳 Backend received payment method:', paymentMethod);
+    console.log('💳 Payment method type:', typeof paymentMethod);
+    console.log('💳 Full request body:', JSON.stringify(req.body, null, 2));
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -791,10 +794,36 @@ const createCheckoutSession = async (req, res) => {
     console.log('📋 - items:', JSON.stringify(items));
     console.log('📋 - shippingAddress:', JSON.stringify(shippingAddress || {}));
     
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
+    // Determine payment method types based on selected method
+    let paymentMethodTypes = ['card']; // Default fallback
+    let automaticPaymentMethods = null;
+    
+    if (paymentMethod === 'apple_pay') {
+      paymentMethodTypes = ['card', 'apple_pay'];
+    } else if (paymentMethod === 'google_pay') {
+      paymentMethodTypes = ['card', 'google_pay'];
+    } else if (paymentMethod === 'samsung_pay') {
+      paymentMethodTypes = ['card', 'link']; // Samsung Pay uses Link
+    } else if (paymentMethod === 'cash_app') {
+      paymentMethodTypes = ['card', 'us_bank_account']; // Cash App uses bank transfers
+    } else {
+      // For 'card' or any other method, use automatic payment methods
+      // This will show all available payment methods based on customer's device/location
+      automaticPaymentMethods = {
+        enabled: true,
+        allow_redirects: 'never'
+      };
+      paymentMethodTypes = ['card']; // Still include card as fallback
+    }
+
+    console.log('💳 Selected payment method:', paymentMethod);
+    console.log('💳 Payment method types:', paymentMethodTypes);
+    console.log('💳 Automatic payment methods:', automaticPaymentMethods);
+
+    // Create checkout session configuration
+    const sessionConfig = {
       customer: customer.id,
-      payment_method_types: ['card'],
+      payment_method_types: paymentMethodTypes,
       line_items: lineItems,
       mode: 'payment',
       success_url: successUrl,
@@ -810,7 +839,15 @@ const createCheckoutSession = async (req, res) => {
       shipping_address_collection: {
         allowed_countries: ['US', 'CA', 'GB'],
       },
-    });
+    };
+
+    // Add automatic payment methods if enabled
+    if (automaticPaymentMethods) {
+      sessionConfig.automatic_payment_methods = automaticPaymentMethods;
+    }
+
+    // Create checkout session
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     console.log('✅ Checkout session created:', session.id);
 

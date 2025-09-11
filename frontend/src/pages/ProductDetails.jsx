@@ -278,15 +278,15 @@ const ProductDetails = () => {
              <h2 className="text-lg font-semibold">Pricing</h2>
              <div className="flex items-center gap-3">
                <span className="text-2xl sm:text-3xl font-bold text-amber-600">
-                 ₹{product?.newPrice || product?.price}
+                 ${product?.newPrice || product?.price}
             </span>
                {product?.newPrice && product?.newPrice < product?.price && (
                  <>
                    <span className="text-lg text-gray-500 line-through">
-              ₹{product?.price}
+              ${product?.price}
             </span>
                    <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-semibold">
-                     Save ₹{product?.price - product?.newPrice}
+                     Save ${product?.price - product?.newPrice}
                    </span>
                  </>
                )}

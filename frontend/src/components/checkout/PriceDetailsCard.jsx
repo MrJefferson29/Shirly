@@ -7,11 +7,11 @@ const PriceDetailsCard = ({
     { label: "Total Products", value: totalItems },
     {
       label: "Subtotal",
-      value: `₹${actualPriceOfCart}`,
+      value: `$${actualPriceOfCart}`,
     },
     {
       label: "Discount",
-      value: `-₹${actualPriceOfCart - totalPriceOfCartProducts}`,
+      value: `-$${actualPriceOfCart - totalPriceOfCartProducts}`,
     },
     {
       label: "Delivery Charges",
