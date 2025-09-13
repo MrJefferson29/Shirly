@@ -13,7 +13,7 @@ cloudinary.config({
 const productStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'eyesome/products',
+    folder: 'lumera/products',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
     transformation: [
       { width: 800, height: 800, crop: 'limit', quality: 'auto' },
@@ -26,7 +26,7 @@ const productStorage = new CloudinaryStorage({
 const categoryStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'eyesome/categories',
+    folder: 'lumera/categories',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
     transformation: [
       { width: 400, height: 400, crop: 'limit', quality: 'auto' },

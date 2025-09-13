@@ -26,7 +26,7 @@ const LandingContent = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-6">
-              Why Choose <span className="font-semibold">ShirlyBlack</span>?
+              Why Choose <span className="font-semibold">Luméra</span>?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Experience the perfect blend of style, comfort, and innovation in every frame we create
@@ -86,7 +86,7 @@ const LandingContent = () => {
                 See the World <span className="font-semibold">Differently</span>
               </h2>
               <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-                At ShirlyBlack, we believe that eyewear is more than just a necessity—it's a statement of who you are. 
+                At Luméra, we believe that eyewear is more than just a necessity—it's a statement of who you are. 
                 Our carefully curated collection combines timeless elegance with modern innovation.
               </p>
               <div className="space-y-4">

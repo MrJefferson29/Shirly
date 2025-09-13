@@ -21,12 +21,7 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
   const { cart, clearCart, totalPriceOfCartProducts } = useCartContext();
   const { currentAddress, userAddress, loading } = useProductsContext();
   
-  // Debug: Log the address values
-  console.log('🔍 SimplePayment render - currentAddress:', currentAddress);
-  console.log('🔍 SimplePayment render - userAddress:', userAddress);
-  console.log('🔍 SimplePayment render - currentAddress keys:', currentAddress ? Object.keys(currentAddress) : 'undefined');
-  console.log('🔍 SimplePayment render - userAddress keys:', userAddress ? Object.keys(userAddress) : 'undefined');
-  console.log('🔍 SimplePayment render - loading:', loading);
+  // Address values are available for payment processing
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
@@ -65,13 +60,7 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
     setError(null);
 
     try {
-      // Check if address is available
-      console.log('🔍 Payment attempt - currentAddress:', currentAddress);
-      console.log('🔍 Payment attempt - currentAddress type:', typeof currentAddress);
-      console.log('🔍 Payment attempt - currentAddress keys:', currentAddress ? Object.keys(currentAddress) : 'undefined');
-      console.log('🔍 Payment attempt - currentAddress length:', currentAddress ? Object.keys(currentAddress).length : 'undefined');
-      
-      // More robust address validation
+      // Validate address before proceeding with payment
       if (!currentAddress || 
           Object.keys(currentAddress).length === 0 || 
           !currentAddress.fullname || 
@@ -80,24 +69,11 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
           !currentAddress.city || 
           !currentAddress.state || 
           !currentAddress.pincode) {
-        console.log('❌ Address validation failed - no address selected');
-        console.log('❌ Address validation details:', {
-          hasAddress: !!currentAddress,
-          keysLength: currentAddress ? Object.keys(currentAddress).length : 0,
-          hasFullname: currentAddress?.fullname,
-          hasMobile: currentAddress?.mobile,
-          hasFlat: currentAddress?.flat,
-          hasCity: currentAddress?.city,
-          hasState: currentAddress?.state,
-          hasPincode: currentAddress?.pincode
-        });
+        // Address validation failed
         throw new Error('Please add a shipping address before proceeding to payment.');
       }
 
-      console.log('📋 Current address being sent:', currentAddress);
-      console.log('📋 Current address JSON:', JSON.stringify(currentAddress, null, 2));
-      console.log('💳 Selected payment method:', selectedPaymentMethod);
-      console.log('💳 Payment method type:', typeof selectedPaymentMethod);
+      // Proceeding with payment using current address and selected payment method
 
       // Create checkout session with Stripe
       const response = await createCheckoutSessionService(
@@ -133,7 +109,19 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
 
     } catch (error) {
       console.error('Payment error:', error);
-      setError(error.message || 'Payment failed. Please try again.');
+      
+      // Handle specific error types
+      let errorMessage = 'Payment failed. Please try again.';
+      
+      if (error.response?.status === 503) {
+        errorMessage = 'Payment service is temporarily unavailable. Please try again in a few moments or contact support.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
       onPaymentError(error);
     } finally {
       setIsLoading(false);
@@ -146,6 +134,18 @@ const PaymentForm = ({ onPaymentSuccess, onPaymentError }) => {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-600 text-sm">{error}</p>
+          {error.includes('temporarily unavailable') && (
+            <button
+              type="button"
+              onClick={() => {
+                setError('');
+                handleSubmit({ preventDefault: () => {} });
+              }}
+              className="mt-2 text-sm text-red-700 hover:text-red-800 underline"
+            >
+              Try Again
+            </button>
+          )}
         </div>
       )}
 

@@ -1,6 +1,6 @@
-# ShirlyBlack Backend API
+# Luméra Backend API
 
-A fully functional Express.js backend for the ShirlyBlack ecommerce application.
+A fully functional Express.js backend for the Luméra ecommerce application.
 
 ## 🚀 Features
 

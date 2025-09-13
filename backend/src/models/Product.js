@@ -37,12 +37,6 @@ const productSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  dimensions: {
-    length: String,
-    width: String,
-    height: String,
-    unit: { type: String, default: 'cm' }
-  },
   price: {
     type: Number,
     required: [true, 'Price is required'],
@@ -98,11 +92,6 @@ const productSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
-  condition: {
-    type: String,
-    enum: ['New', 'Used', 'Refurbished'],
-    default: 'New'
-  },
   reviewCount: {
     type: Number,
     default: 0,
@@ -119,7 +108,6 @@ productSchema.index({ category: 1, gender: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ rating: -1 });
 productSchema.index({ trending: -1 });
-productSchema.index({ condition: 1 });
 productSchema.index({ isActive: 1 });
 
 // Virtual for discount percentage

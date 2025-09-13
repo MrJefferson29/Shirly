@@ -8,6 +8,9 @@ import {
   CATEGORIES_URL,
 } from "./apiUrls";
 
+// Base URL for API
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+
 export const loginService = (email, password) =>
   axios.post(LOGIN_URL, { email, password });
 
@@ -333,3 +336,164 @@ export const markReviewHelpfulService = (reviewId, token) =>
       },
     }
   );
+
+// Notification Services
+export const getNotificationsService = (token, options = {}) => {
+  const params = new URLSearchParams();
+  if (options.limit) params.append('limit', options.limit);
+  if (options.skip) params.append('skip', options.skip);
+  if (options.unreadOnly) params.append('unreadOnly', options.unreadOnly);
+  if (options.type) params.append('type', options.type);
+
+  return axios.get(`${API_BASE_URL}/notifications?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getUnreadCountService = (token) =>
+  axios.get(`${API_BASE_URL}/notifications/unread-count`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const markNotificationAsReadService = (notificationId, token) =>
+  axios.put(`${API_BASE_URL}/notifications/${notificationId}/read`, {}, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const markAllNotificationsAsReadService = (token) =>
+  axios.put(`${API_BASE_URL}/notifications/mark-all-read`, {}, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const deleteNotificationService = (notificationId, token) =>
+  axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const deleteAllNotificationsService = (token) =>
+  axios.delete(`${API_BASE_URL}/notifications`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const createNotificationService = (notificationData, token) =>
+  axios.post(`${API_BASE_URL}/notifications`, notificationData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const sendBulkNotificationService = (notificationData, token) =>
+  axios.post(`${API_BASE_URL}/notifications/bulk`, notificationData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const testEmailConfigService = (token) =>
+  axios.get(`${API_BASE_URL}/notifications/test-email`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+// Analytics Services
+export const getDashboardAnalyticsService = (token, options = {}) => {
+  const params = new URLSearchParams();
+  if (options.startDate) params.append('startDate', options.startDate.toISOString());
+  if (options.endDate) params.append('endDate', options.endDate.toISOString());
+
+  return axios.get(`${API_BASE_URL}/analytics/dashboard?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getSalesAnalyticsService = (token, options = {}) => {
+  const params = new URLSearchParams();
+  if (options.startDate) params.append('startDate', options.startDate.toISOString());
+  if (options.endDate) params.append('endDate', options.endDate.toISOString());
+  if (options.groupBy) params.append('groupBy', options.groupBy);
+
+  return axios.get(`${API_BASE_URL}/analytics/sales?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getUserAnalyticsService = (token, options = {}) => {
+  const params = new URLSearchParams();
+  if (options.startDate) params.append('startDate', options.startDate.toISOString());
+  if (options.endDate) params.append('endDate', options.endDate.toISOString());
+
+  return axios.get(`${API_BASE_URL}/analytics/users?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getProductAnalyticsService = (token, options = {}) => {
+  const params = new URLSearchParams();
+  if (options.startDate) params.append('startDate', options.startDate.toISOString());
+  if (options.endDate) params.append('endDate', options.endDate.toISOString());
+
+  return axios.get(`${API_BASE_URL}/analytics/products?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getSearchAnalyticsService = (token, options = {}) => {
+  const params = new URLSearchParams();
+  if (options.startDate) params.append('startDate', options.startDate.toISOString());
+  if (options.endDate) params.append('endDate', options.endDate.toISOString());
+
+  return axios.get(`${API_BASE_URL}/analytics/search?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const trackAnalyticsEventService = (eventData, token) =>
+  axios.post(`${API_BASE_URL}/analytics/track`, eventData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const trackPageViewService = (pageData, token) =>
+  axios.post(`${API_BASE_URL}/analytics/track/page-view`, pageData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const trackProductViewService = (productData, token) =>
+  axios.post(`${API_BASE_URL}/analytics/track/product-view`, productData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+export const trackSearchService = (searchData, token) =>
+  axios.post(`${API_BASE_URL}/analytics/track/search`, searchData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });

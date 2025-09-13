@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
+const notificationService = require('../services/notificationService');
+const analyticsService = require('../services/analyticsService');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -44,6 +46,35 @@ const register = async (req, res) => {
 
     // Generate token
     const token = generateToken(user._id);
+
+    // Track user registration analytics
+    try {
+      await analyticsService.trackEvent({
+        type: 'user_registration',
+        userId: user._id,
+        sessionId: req.sessionID || null,
+        data: {
+          username: user.username,
+          email: user.email,
+          role: user.role
+        },
+        metadata: {
+          userAgent: req.get('User-Agent'),
+          ipAddress: req.ip
+        }
+      });
+    } catch (analyticsError) {
+      console.error('Analytics tracking error:', analyticsError);
+      // Don't fail the registration if analytics fails
+    }
+
+    // Send welcome notification
+    try {
+      await notificationService.notifyWelcome(user);
+    } catch (notificationError) {
+      console.error('Failed to send welcome notification:', notificationError);
+      // Don't fail the registration if notification fails
+    }
 
     res.status(201).json({
       success: true,
@@ -117,6 +148,27 @@ const login = async (req, res) => {
 
     // Generate token
     const token = generateToken(user._id);
+
+    // Track user login analytics
+    try {
+      await analyticsService.trackEvent({
+        type: 'user_login',
+        userId: user._id,
+        sessionId: req.sessionID || null,
+        data: {
+          username: user.username,
+          email: user.email,
+          role: user.role
+        },
+        metadata: {
+          userAgent: req.get('User-Agent'),
+          ipAddress: req.ip
+        }
+      });
+    } catch (analyticsError) {
+      console.error('Analytics tracking error:', analyticsError);
+      // Don't fail the login if analytics fails
+    }
 
     res.json({
       success: true,
@@ -263,20 +315,14 @@ const changePassword = async (req, res) => {
 // @access  Private
 const getUserAddress = async (req, res) => {
   try {
-    console.log('🏠 getUserAddress called for user:', req.user._id);
     const user = await User.findById(req.user._id).select('shippingAddress addresses');
     
     if (!user) {
-      console.log('🏠 User not found:', req.user._id);
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-
-    console.log('🏠 User found:', user.username);
-    console.log('🏠 User shippingAddress:', user.shippingAddress);
-    console.log('🏠 User addresses array:', user.addresses);
     
     let shippingAddress = user.shippingAddress || {};
     
@@ -298,14 +344,9 @@ const getUserAddress = async (req, res) => {
           // Update user's shippingAddress field
           user.shippingAddress = shippingAddress;
           await user.save();
-          console.log('🏠 Migrated address to shippingAddress field');
         }
       }
     }
-
-    console.log('🏠 Returning shippingAddress:', shippingAddress);
-    console.log('🏠 ShippingAddress keys:', Object.keys(shippingAddress));
-    console.log('🏠 ShippingAddress length:', Object.keys(shippingAddress).length);
     
     res.status(200).json({
       success: true,

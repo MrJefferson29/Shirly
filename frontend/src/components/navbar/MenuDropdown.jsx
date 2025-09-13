@@ -2,10 +2,12 @@ import { BsBookmarkHeart } from "react-icons/bs";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import { MdAdminPanelSettings } from "react-icons/md";
 import { HiOutlineSupport } from "react-icons/hi";
-import { useAuthContext } from "../../contexts";
+import { HiOutlineBell } from "react-icons/hi";
+import { useAuthContext, useNotificationContext } from "../../contexts";
 
 const MenuDropdown = ({ navigate, onClose }) => {
-  const { userInfo } = useAuthContext();
+  const { userInfo, token } = useAuthContext();
+  const { unreadCount } = useNotificationContext();
   
   const handleNavigation = (path) => {
     navigate(path);

@@ -248,13 +248,6 @@ router.post('/products', uploadProductImages.array('images', 5), productValidati
     }
 
     // Parse JSON fields
-    if (productData.dimensions) {
-      try {
-        productData.dimensions = JSON.parse(productData.dimensions);
-      } catch (error) {
-        console.error('Error parsing dimensions:', error);
-      }
-    }
 
     if (productData.specifications) {
       try {

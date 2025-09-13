@@ -69,7 +69,7 @@ const ContactUs = () => {
       icon: HiOutlineMail,
       availability: "24/7",
       responseTime: "Within 24 hours",
-      contact: "support@shirlyblack.com",
+      contact: "support@lumera.com",
       color: "bg-gray-800"
     },
     {
@@ -205,7 +205,7 @@ const ContactUs = () => {
 
             {/* Why Choose Us */}
             <div className="card bg-gray-50">
-              <h2 className="text-xl font-semibold text-black mb-4">Why Choose ShirlyBlack?</h2>
+              <h2 className="text-xl font-semibold text-black mb-4">Why Choose Luméra?</h2>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <HiOutlineShieldCheck className="text-green-600 text-lg" />

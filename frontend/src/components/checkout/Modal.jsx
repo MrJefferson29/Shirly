@@ -52,8 +52,8 @@ const Modal = ({ showModal, setShowModal }) => {
       key: "rzp_test_H2lv7MTHG3JATn",
       amount: totalPriceOfCartProducts * 100,
       currency: "USD",
-      name: "ShirlyBlack",
-      description: "Be awesome with eyesome :)",
+      name: "Luméra",
+      description: "Be awesome with Luméra :)",
       image: appLogo,
       handler: function () {
         clearCart();

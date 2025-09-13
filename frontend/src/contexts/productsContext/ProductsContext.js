@@ -30,27 +30,14 @@ const ProductsContextProvider = ({ children }) => {
       if (token) {
         setAddressLoading(true);
         try {
-          console.log('🏠 Loading user address...');
           const response = await getUserAddressService(token);
-          console.log('🏠 Full address response:', response);
-          console.log('🏠 Address response data:', response.data);
-          console.log('🏠 Address response success:', response.data.success);
-          console.log('🏠 Address response data.shippingAddress:', response.data.data?.shippingAddress);
           
           if (response.data.success && response.data.data?.shippingAddress) {
             const address = response.data.data.shippingAddress;
-            console.log('🏠 Setting user address:', address);
-            console.log('🏠 Address keys:', Object.keys(address));
-            console.log('🏠 Address values:', Object.values(address));
             setUserAddress(address);
-          } else {
-            console.log('🏠 No address found in response');
-            console.log('🏠 Response success:', response.data.success);
-            console.log('🏠 Response data:', response.data.data);
           }
         } catch (error) {
-          console.log('🏠 Error loading address:', error);
-          console.log('🏠 Error details:', error.response?.data);
+          console.error('Error loading address:', error);
         } finally {
           setAddressLoading(false);
         }
@@ -142,16 +129,26 @@ const ProductsContextProvider = ({ children }) => {
     }
   };
 
+  const addAddress = async (addressData) => {
+    try {
+      if (token) {
+        const response = await updateAddressService(addressData, token);
+        if (response.data.success) {
+          const updatedAddress = response.data.data.shippingAddress;
+          setUserAddress(updatedAddress);
+        }
+      }
+    } catch (error) {
+      console.error('Error adding address:', error);
+      throw error;
+    }
+  };
+
   const isInCart = (productId) =>
     state.allProducts.find((item) => item._id === productId && item.inCart);
   const isInWish = (productId) =>
     state.allProducts.find((item) => item._id === productId && item.inWish);
 
-  // Debug currentAddress
-  console.log('🏠 Context render - userAddress:', userAddress);
-  console.log('🏠 Context render - currentAddress (userAddress):', userAddress);
-  console.log('🏠 Context render - userAddress keys:', userAddress ? Object.keys(userAddress) : 'undefined');
-  console.log('🏠 Context render - userAddress length:', userAddress ? Object.keys(userAddress).length : 'undefined');
 
   return (
     <ProductsContext.Provider
@@ -175,6 +172,7 @@ const ProductsContextProvider = ({ children }) => {
         applyFilters,
         clearFilters,
         updateAddress,
+        addAddress,
         setisOrderPlaced,
       }}
     >

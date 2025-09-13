@@ -36,20 +36,14 @@ const AdminProducts = () => {
     subcategory: '',
     gender: 'Unisex',
     weight: '',
-    dimensions: {
-      length: '',
-      width: '',
-      height: '',
-      unit: 'cm'
-    },
     price: '',
     newPrice: '',
     quantity: '',
     images: '',
     features: '',
     tags: '',
-    condition: 'New',
     trending: false,
+    isActive: true,
     specifications: {}
   });
 
@@ -167,9 +161,9 @@ const AdminProducts = () => {
     
     if (invalidFiles.length > 0) {
       notify('error', 'Please select only image files (JPEG, PNG, WebP)');
-      return;
-    }
-    
+        return;
+      }
+
     // Validate file sizes (max 5MB per file)
     const maxSize = 5 * 1024 * 1024; // 5MB
     const oversizedFiles = files.filter(file => file.size > maxSize);
@@ -274,14 +268,13 @@ const AdminProducts = () => {
       subcategory: '',
       gender: 'Unisex',
       weight: '',
-      dimensions: { length: '', width: '', height: '', unit: 'cm' },
       price: '',
       newPrice: '',
       quantity: '',
       images: '',
       features: '',
       tags: '',
-      condition: 'New',
+      isActive: true,
       trending: false,
       specifications: {}
     });
@@ -301,30 +294,15 @@ const AdminProducts = () => {
       subcategory: product.subcategory || '',
       gender: product.gender || 'Unisex',
       weight: product.weight || '',
-      dimensions: {
-        length: product.dimensions?.length || '',
-        width: product.dimensions?.width || '',
-        height: product.dimensions?.height || '',
-        unit: product.dimensions?.unit || 'cm'
-      },
       price: product.price.toString(),
       newPrice: product.newPrice?.toString() || '',
       quantity: product.quantity.toString(),
       images: product.images?.join(', ') || '',
       features: product.features?.join(', ') || '',
       tags: product.tags?.join(', ') || '',
-      condition: product.condition || 'New',
+      isActive: product.isActive !== undefined ? product.isActive : true,
       trending: product.trending || false,
-      specifications: {
-        frameMaterial: product.specifications?.frameMaterial || '',
-        lensMaterial: product.specifications?.lensMaterial || '',
-        lensColor: product.specifications?.lensColor || '',
-        frameColor: product.specifications?.frameColor || '',
-        lensWidth: product.specifications?.lensWidth || '',
-        bridgeWidth: product.specifications?.bridgeWidth || '',
-        templeLength: product.specifications?.templeLength || '',
-        polarized: product.specifications?.polarized || false
-      }
+      specifications: product.specifications || {}
     });
     setShowAddForm(true);
   };
@@ -681,7 +659,7 @@ const AdminProducts = () => {
               </div>
 
               {/* Image Upload Section */}
-              <div className="space-y-4">
+                <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Product Images <span className="text-red-500">*</span>
@@ -712,8 +690,8 @@ const AdminProducts = () => {
                         or drag and drop
                       </span>
                     </label>
-                  </div>
-                </div>
+                        </div>
+                      </div>
 
                 {/* Existing Images (Edit Mode) */}
                 {editingProduct && existingImages.length > 0 && (
@@ -731,46 +709,127 @@ const AdminProducts = () => {
                           />
                           <div className="absolute bottom-0 left-0 right-0 bg-blue-600 bg-opacity-75 text-white text-xs p-1 rounded-b-lg text-center">
                             Current Image
-                          </div>
+                  </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-
+                  
                 {/* New Image Preview */}
-                {selectedImages.length > 0 && (
+                  {selectedImages.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-gray-700 mb-3">
                       New Images ({selectedImages.length}/5)
                     </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                      {selectedImages.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={URL.createObjectURL(image)}
-                            alt={`Preview ${index + 1}`}
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        {selectedImages.map((image, index) => (
+                          <div key={index} className="relative group">
+                              <img
+                                src={URL.createObjectURL(image)}
+                                alt={`Preview ${index + 1}`}
                             className="w-full h-24 object-cover rounded-lg border border-gray-200"
-                          />
-                          <button
-                            type="button"
+                              />
+                            <button
+                              type="button"
                             onClick={() => handleImageRemove(index)}
                             className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
-                          >
+                            >
                             <HiOutlineXCircle className="w-4 h-4" />
-                          </button>
+                            </button>
                           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg">
                             {image.name.length > 15 
                               ? `${image.name.substring(0, 15)}...` 
                               : image.name
                             }
                           </div>
-                        </div>
-                      ))}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
+
+              {/* Additional Product Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Subcategory</label>
+                    <input
+                      type="text"
+                    name="subcategory"
+                    value={formData.subcategory}
+                      onChange={handleInputChange}
+                    placeholder="e.g., Aviator, Wayfarer, Sports"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    />
+                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                      onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  >
+                    <option value="Unisex">Unisex</option>
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                    <option value="Kids">Kids</option>
+                  </select>
+                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Weight</label>
+                    <input
+                      type="text"
+                    name="weight"
+                    value={formData.weight}
+                      onChange={handleInputChange}
+                    placeholder="e.g., 25g, 1.2oz"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    />
+                  </div>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="isActive"
+                      checked={formData.isActive}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
+                    />
+                    <span className="ml-2 text-sm font-semibold text-gray-700">Active Product</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Features and Tags */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Features</label>
+                  <textarea
+                    name="features"
+                    value={formData.features}
+                    onChange={handleInputChange}
+                    placeholder="Enter features separated by commas (e.g., UV Protection, Polarized, Anti-glare)"
+                    rows="3"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Separate multiple features with commas</p>
+                    </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Tags</label>
+                  <textarea
+                    name="tags"
+                    value={formData.tags}
+                        onChange={handleInputChange}
+                    placeholder="Enter tags separated by commas (e.g., summer, casual, luxury, vintage)"
+                    rows="3"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                      />
+                  <p className="text-xs text-gray-500 mt-1">Separate multiple tags with commas</p>
+                </div>
+              </div>
+
 
               {/* Form Actions */}
               <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
@@ -842,7 +901,7 @@ const AdminProducts = () => {
                           Trending
                         </span>
                       )}
-          </div>
+                        </div>
                         </div>
                   <div className="flex items-center space-x-2">
                     <button
@@ -856,7 +915,7 @@ const AdminProducts = () => {
                     >
                       {product.isActive ? <HiOutlineEye className="w-4 h-4" /> : <HiOutlineEyeOff className="w-4 h-4" />}
                     </button>
-                        </div>
+                      </div>
                       </div>
 
                 {product.images && product.images.length > 0 && (
@@ -883,11 +942,11 @@ const AdminProducts = () => {
                       <span className="text-gray-600">Sale Price:</span>
                       <span className="font-medium text-green-600">${product.newPrice}</span>
                     </div>
-                  )}
+                        )}
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Stock:</span>
                     <span className="font-medium text-black">{product.quantity}</span>
-                  </div>
+                      </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Rating:</span>
                     <span className="font-medium text-black">{product.rating || 0}/5</span>
@@ -910,11 +969,11 @@ const AdminProducts = () => {
                       <HiOutlineTrash className="w-4 h-4" />
                         Delete
                       </button>
-                  </div>
+          </div>
                   <span className="text-xs text-gray-500">
                     {new Date(product.createdAt).toLocaleDateString()}
                   </span>
-          </div>
+        </div>
         </div>
             ))}
           </div>

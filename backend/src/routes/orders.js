@@ -4,6 +4,8 @@ const { protect } = require('../middleware/auth');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const notificationService = require('../services/notificationService');
+const analyticsService = require('../services/analyticsService');
 
 const router = express.Router();
 
@@ -111,12 +113,43 @@ router.post('/', createOrderValidation, async (req, res) => {
     user.cart = [];
     await user.save();
 
-    // Update product quantities
+
+    // Update product quantities (legacy support)
     for (const item of orderItems) {
       await Product.findByIdAndUpdate(
         item.product,
         { $inc: { quantity: -item.quantity } }
       );
+    }
+
+    // Track order creation analytics
+    try {
+      await analyticsService.trackEvent({
+        type: 'order_created',
+        userId: req.user._id,
+        sessionId: req.sessionID || null,
+        data: {
+          orderId: order._id,
+          totalAmount: order.totalAmount,
+          itemCount: orderItems.length,
+          paymentMethod: order.paymentMethod
+        },
+        metadata: {
+          userAgent: req.get('User-Agent'),
+          ipAddress: req.ip
+        }
+      });
+    } catch (analyticsError) {
+      console.error('Analytics tracking error:', analyticsError);
+      // Don't fail the order creation if analytics fails
+    }
+
+    // Send order confirmation notification
+    try {
+      await notificationService.notifyOrderConfirmation(order);
+    } catch (notificationError) {
+      console.error('Failed to send order confirmation notification:', notificationError);
+      // Don't fail the order creation if notification fails
     }
 
     res.status(201).json({
@@ -254,6 +287,21 @@ router.put('/:id/status', async (req, res) => {
     }
 
     await order.save();
+
+    // Send order status update notification
+    try {
+      await notificationService.notifyOrderStatusUpdate(order, status);
+      
+      // Send specific notifications for certain statuses
+      if (status === 'shipped') {
+        await notificationService.notifyOrderShipped(order, trackingNumber);
+      } else if (status === 'delivered') {
+        await notificationService.notifyOrderDelivered(order);
+      }
+    } catch (notificationError) {
+      console.error('Failed to send order status update notification:', notificationError);
+      // Don't fail the status update if notification fails
+    }
 
     res.json({
       success: true,

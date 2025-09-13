@@ -1,15 +1,17 @@
 import { CiSearch } from "react-icons/ci";
 import { filterBySearch } from "../../utils/filterUtils";
-import { useProductsContext } from "../../contexts";
+import { useProductsContext, useAuthContext } from "../../contexts";
 import { useEffect, useState } from "react";
 import CartItemCard from "../cart/CartItemCard";
 import { useLocation, useNavigate } from "react-router-dom";
 import spinningLoaders from "../../assets/loaderBlack.svg";
+import { trackSearchService } from "../../api/apiServices";
 const Search = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const { allProducts, applyFilters } = useProductsContext();
+  const { token } = useAuthContext();
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [showList, setShowList] = useState(true);
@@ -40,8 +42,27 @@ const Search = () => {
     setSearch(e.target.value);
     if (!showList) setShowList(true);
   };
-  const submitHandler = (e) => {
+  // Function to track search analytics
+  const trackSearch = async (query, resultsCount) => {
+    if (query.trim()) {
+      try {
+        await trackSearchService({
+          query: query.trim(),
+          resultsCount: resultsCount,
+          timestamp: new Date().toISOString()
+        }, token);
+      } catch (error) {
+        console.error('Failed to track search:', error);
+      }
+    }
+  };
+
+  const submitHandler = async (e) => {
     e.preventDefault();
+    
+    // Track search analytics when user presses Enter
+    await trackSearch(search, filteredData.length);
+    
     applyFilters("searchText", search);
     setShowList(false);
     navigate("/products");
@@ -77,6 +98,7 @@ const Search = () => {
                   product={product}
                   isSearch={true}
                   setSearch={setSearch}
+                  onSearchClick={() => trackSearch(search, filteredData.length)}
                 />
               </li>
             ))

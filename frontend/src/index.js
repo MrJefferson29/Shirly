@@ -9,6 +9,7 @@ import {
   CartContextProvider,
   ProductsContextProvider,
   WishlistContextProvider,
+  NotificationProvider,
 } from "./contexts";
 
 ReactDOM.render(
@@ -17,9 +18,11 @@ ReactDOM.render(
       <ProductsContextProvider>
         <CartContextProvider>
           <WishlistContextProvider>
-            <Router>
-              <App />
-            </Router>
+            <NotificationProvider>
+              <Router>
+                <App />
+              </Router>
+            </NotificationProvider>
           </WishlistContextProvider>
         </CartContextProvider>
       </ProductsContextProvider>

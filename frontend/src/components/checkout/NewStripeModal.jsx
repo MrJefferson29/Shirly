@@ -13,11 +13,7 @@ const NewStripeModal = ({ showModal, setShowModal }) => {
   const { currentAddress, userAddress, addressLoading } = useProductsContext();
   const navigate = useNavigate();
   
-  // Debug: Log the address values
-  console.log('🔍 NewStripeModal render - currentAddress:', currentAddress);
-  console.log('🔍 NewStripeModal render - userAddress:', userAddress);
-  console.log('🔍 NewStripeModal render - currentAddress keys:', currentAddress ? Object.keys(currentAddress) : 'undefined');
-  console.log('🔍 NewStripeModal render - userAddress keys:', userAddress ? Object.keys(userAddress) : 'undefined');
+  // Address values are available for payment processing
 
   const handlePaymentSuccess = (orderData) => {
     // Don't show notification here since PaymentSuccess page will handle it
@@ -33,7 +29,19 @@ const NewStripeModal = ({ showModal, setShowModal }) => {
 
   const handlePaymentError = (error) => {
     console.error("Payment error:", error);
-    notify("error", "Payment failed. Please try again.");
+    
+    // Handle specific error types
+    let errorMessage = "Payment failed. Please try again.";
+    
+    if (error.response?.status === 503) {
+      errorMessage = "Payment service is temporarily unavailable. Please try again in a few moments.";
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    notify("error", errorMessage);
   };
 
   if (!showModal) return null;

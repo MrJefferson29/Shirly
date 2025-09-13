@@ -353,7 +353,7 @@ const WarrantySupport = () => {
                       <HiOutlineMail className="text-gray-400" />
                       <div>
                         <p className="font-medium text-black">Email Support</p>
-                        <p className="text-gray-600">support@shirlyblack.com</p>
+                        <p className="text-gray-600">support@lumera.com</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">

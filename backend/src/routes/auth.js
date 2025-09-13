@@ -10,6 +10,7 @@ const {
   getUserAddress,
   updateAddress
 } = require('../controllers/authController');
+const notificationService = require('../services/notificationService');
 
 const router = express.Router();
 

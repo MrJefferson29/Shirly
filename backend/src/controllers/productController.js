@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const analyticsService = require('../services/analyticsService');
 
 // @desc    Get all products
 // @route   GET /api/products
@@ -96,6 +97,23 @@ const getProduct = async (req, res) => {
         success: false,
         message: 'Product not found'
       });
+    }
+
+    // Track product view analytics
+    try {
+      await analyticsService.trackProductView(
+        req.params.id,
+        req.user?._id || null,
+        req.sessionID || null,
+        {
+          userAgent: req.get('User-Agent'),
+          ipAddress: req.ip,
+          referrer: req.get('Referer')
+        }
+      );
+    } catch (analyticsError) {
+      console.error('Analytics tracking error:', analyticsError);
+      // Don't fail the request if analytics fails
     }
 
     res.json({
@@ -241,6 +259,24 @@ const searchProducts = async (req, res) => {
       .limit(parseInt(limit))
 
     const total = await Product.countDocuments(filter);
+
+    // Track search analytics
+    try {
+      await analyticsService.trackSearch(
+        q,
+        total,
+        req.user?._id || null,
+        req.sessionID || null,
+        {
+          userAgent: req.get('User-Agent'),
+          ipAddress: req.ip,
+          referrer: req.get('Referer')
+        }
+      );
+    } catch (analyticsError) {
+      console.error('Analytics tracking error:', analyticsError);
+      // Don't fail the request if analytics fails
+    }
 
     res.json({
       success: true,

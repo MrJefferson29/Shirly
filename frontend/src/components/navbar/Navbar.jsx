@@ -4,7 +4,7 @@ import { BsBookmarkHeart } from "react-icons/bs";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import { MdOutlineExplore } from "react-icons/md";
 import { MdAdminPanelSettings } from "react-icons/md";
-import { HiOutlineSupport } from "react-icons/hi";
+import { HiOutlineQuestionMarkCircle } from "react-icons/hi";
 
 import { RxHamburgerMenu } from "react-icons/rx";
 import defaultUser from "../../assets/defaultUser.png";
@@ -14,9 +14,11 @@ import {
   useAuthContext,
   useCartContext,
   useWishlistContext,
+  useNotificationContext,
 } from "../../contexts";
 
 import Search from "../filters/Search";
+import NotificationBell from "../notifications/NotificationBell";
 
 const Navbar = () => {
   const { token, userInfo } = useAuthContext();
@@ -110,12 +112,17 @@ const Navbar = () => {
                 </div>
               )}
             </li>
+            {token && (
+              <li className="mx-2">
+                <NotificationBell />
+              </li>
+            )}
             {userInfo?.role !== 'admin' && (
               <li
                 className="relative bg-black text-white p-2 rounded-full hover:bg-gray-800 cursor-pointer mx-2 transition shadow-sm"
                 onClick={() => navigate("/chat")}
               >
-                <HiOutlineSupport />
+                <HiOutlineQuestionMarkCircle />
               </li>
             )}
             <li

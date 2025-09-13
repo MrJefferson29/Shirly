@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const emailService = require('./services/emailService');
 require('dotenv').config();
 
 const app = express();
@@ -20,14 +21,24 @@ const io = new Server(server, {
 // Security middleware
 app.use(helmet());
 
-// Rate limiting (more lenient for development)
+// Rate limiting (very lenient for development)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // limit each IP to 1000 requests per windowMs (increased for development)
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10000, // limit each IP to 10000 requests per minute (very high for development)
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// More lenient rate limiting for notifications
+const notificationLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 1000, // limit each IP to 1000 requests per minute for notifications
+  message: 'Too many notification requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(limiter);
 
 // CORS configuration
@@ -42,6 +53,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   optionsSuccessStatus: 200
 }));
+
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || 'http://localhost:3000');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
+});
 
 // Stripe Webhook must use raw body parser (MUST BE BEFORE express.json())
 app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -270,6 +290,19 @@ const handleCheckoutSessionCompleted = async (session) => {
     await order.save();
     console.log('✅ Order created from checkout session:', order._id);
     
+    // Send order confirmation email
+    try {
+      const emailResult = await emailService.sendOrderConfirmationEmail(order, user);
+      if (emailResult.success) {
+        console.log('✅ Order confirmation email sent:', emailResult.messageId);
+      } else {
+        console.log('⚠️ Failed to send order confirmation email:', emailResult.error);
+      }
+    } catch (emailError) {
+      console.error('❌ Email service error:', emailError);
+      // Don't fail the order creation if email fails
+    }
+    
     // Update user's shipping address if it was changed during checkout
     if (metadata.shippingAddress && metadata.shippingAddress !== '{}') {
       try {
@@ -330,6 +363,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/notifications', notificationLimiter, require('./routes/notifications'));
+app.use('/api/analytics', require('./routes/analytics'));
 
 
 console.log('✅ All routes loaded successfully');
@@ -351,9 +386,65 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/', {
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'ShirlyBlack API is running',
+    message: 'Luméra API is running',
     timestamp: new Date().toISOString()
   });
+});
+
+// Test email endpoint (for development only)
+app.post('/api/test-email', async (req, res) => {
+  try {
+    const { to, orderId } = req.body;
+    
+    if (!to) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email address is required'
+      });
+    }
+
+    // If orderId is provided, send order confirmation email
+    if (orderId) {
+      const Order = require('./models/Order');
+      const User = require('./models/User');
+      
+      const order = await Order.findById(orderId).populate('user');
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+
+      const emailResult = await emailService.sendOrderConfirmationEmail(order, order.user);
+      
+      return res.json({
+        success: emailResult.success,
+        message: emailResult.success ? 'Order confirmation email sent' : 'Failed to send email',
+        data: emailResult
+      });
+    }
+
+    // Otherwise, send a simple test email
+    const emailResult = await emailService.sendTestEmail(
+      to,
+      'Test Email from Luméra',
+      '<h1>Test Email</h1><p>This is a test email from Luméra!</p>'
+    );
+
+    res.json({
+      success: emailResult.success,
+      message: emailResult.success ? 'Test email sent' : 'Failed to send email',
+      data: emailResult
+    });
+  } catch (error) {
+    console.error('❌ Test email error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Test email failed',
+      error: error.message
+    });
+  }
 });
 
 // Test webhook endpoint (for development only)

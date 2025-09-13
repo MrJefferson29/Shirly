@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const analyticsService = require('../services/analyticsService');
 
 // @desc    Get user's cart
 // @route   GET /api/user/cart
@@ -21,7 +22,14 @@ const getCart = async (req, res) => {
     let totalPrice = 0;
     let totalItems = 0;
 
-    const cartItems = user.cart.map(item => {
+    // Clean up cart by removing items with deleted products
+    const validCartItems = user.cart.filter(item => item.product !== null);
+    if (validCartItems.length !== user.cart.length) {
+      user.cart = validCartItems;
+      await user.save();
+    }
+
+    const cartItems = validCartItems.map(item => {
       const itemTotal = item.product.newPrice * item.quantity;
       totalPrice += itemTotal;
       totalItems += item.quantity;
@@ -125,6 +133,28 @@ const addToCart = async (req, res) => {
     }
 
     await user.save();
+
+    // Track cart add analytics
+    try {
+      await analyticsService.trackEvent({
+        type: 'cart_add',
+        userId: req.user._id,
+        sessionId: req.sessionID || null,
+        data: {
+          productId: productId,
+          quantity: quantity,
+          productName: product.name,
+          productPrice: product.newPrice || product.price
+        },
+        metadata: {
+          userAgent: req.get('User-Agent'),
+          ipAddress: req.ip
+        }
+      });
+    } catch (analyticsError) {
+      console.error('Analytics tracking error:', analyticsError);
+      // Don't fail the cart operation if analytics fails
+    }
 
     // Populate the cart with product details
     await user.populate('cart.product', 'name brand price newPrice images category rating');

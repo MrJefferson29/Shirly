@@ -1,4 +1,4 @@
-import { Cart, Wishlist, Checkout, Profile, Orders, AdminDashboard, AdminProducts, AdminOrders, CustomerChat, CustomerOrders } from "../pages";
+import { Cart, Wishlist, Checkout, Profile, Orders, AdminDashboard, AdminProducts, AdminOrders, CustomerChat, CustomerOrders, AnalyticsDashboard } from "../pages";
 
 const privateRoutes = [
   {
@@ -37,6 +37,10 @@ const privateRoutes = [
   {
     path: "/admin/orders",
     element: <AdminOrders />,
+  },
+  {
+    path: "/admin/analytics",
+    element: <AnalyticsDashboard />,
   },
 ];
 export { privateRoutes };

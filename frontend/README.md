@@ -1,13 +1,13 @@
-# <h1 align="center"> ShirlyBlack </h1>
-<h3 align="center">ShirlyBlack is a platform dedicated to providing a seamless shopping experience for eyewear products.</h3>
+# <h1 align="center"> Luméra </h1>
+<h3 align="center">Luméra is a platform dedicated to providing a seamless shopping experience for eyewear products.</h3>
 <br/>
 
 ## Getting Started
 
-To run the ShirlyBlack ecommerce web application locally, please follow these steps:
+To run the Luméra ecommerce web application locally, please follow these steps:
 
-1. git clone https://github.com/SandhyaR1007/eyesome-react.git
-2. cd eyesome-react
+1. git clone https://github.com/SandhyaR1007/lumera-react.git
+2. cd lumera-react
 3. npm install
 4. npm start
 

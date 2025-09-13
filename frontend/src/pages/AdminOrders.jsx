@@ -413,13 +413,13 @@ const AdminOrders = () => {
                 Search Orders
               </label>
               <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search by order #, customer, or product..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+              <input
+                type="text"
+                placeholder="Search by order #, customer, or product..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color] placeholder-[--secondary-text-color]"
-                />
+              />
                 <HiOutlineSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[--secondary-text-color] w-4 h-4" />
               </div>
             </div>
@@ -509,30 +509,30 @@ const AdminOrders = () => {
                   <HiOutlineClipboardList className="text-amber-600" />
                   Bulk Actions:
                 </span>
-                <select
+              <select
                   className="px-3 py-2 border border-black/[0.1] rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white/[0.7] text-[--primary-text-color]"
-                  onChange={(e) => {
-                    if (e.target.value) {
+                onChange={(e) => {
+                  if (e.target.value) {
                         handleBulkAction(e.target.value);
                         e.target.value = ''; // Reset selection
-                    }
-                  }}
-                >
-                  <option value="">Select Action</option>
-                  <option value="mark-confirmed">Mark as Confirmed</option>
-                  <option value="mark-shipped">Mark as Shipped</option>
-                  <option value="mark-delivered">Mark as Delivered</option>
+                  }
+                }}
+              >
+                <option value="">Select Action</option>
+                <option value="mark-confirmed">Mark as Confirmed</option>
+                <option value="mark-shipped">Mark as Shipped</option>
+                <option value="mark-delivered">Mark as Delivered</option>
                   <option value="export-csv">Export Selected to CSV</option>
-                </select>
+              </select>
               </div>
               <div className="flex items-center gap-4">
-                <button
+              <button
                   onClick={() => exportToCSV()}
                   className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
-                >
+              >
                   <HiOutlineDownload />
                   Export All to CSV
-                </button>
+              </button>
                 {selectedOrders.size > 0 && (
                   <span className="text-sm text-[--secondary-text-color] bg-amber-100 px-3 py-1 rounded-full">
                     {selectedOrders.size} selected

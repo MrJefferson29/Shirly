@@ -2,6 +2,7 @@ const { stripe, stripeConfig } = require('../config/stripe');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const emailService = require('../services/emailService');
 
 // @desc    Create Stripe Payment Intent (like your working example)
 // @route   POST /api/payments/create-payment-intent
@@ -168,10 +169,6 @@ const createPaymentIntentLegacy = async (req, res) => {
         },
         phone: order.shippingAddress.phone
       },
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'never'
-      }
     });
 
     // Update order with payment intent ID
@@ -716,13 +713,7 @@ const createCheckoutSession = async (req, res) => {
     const { items, totalAmount, paymentMethod, shippingAddress, successUrl, cancelUrl } = req.body;
     const userId = req.user._id;
     
-    console.log('📋 Backend received shipping address:', shippingAddress);
-    console.log('📋 Shipping address type:', typeof shippingAddress);
-    console.log('📋 Shipping address keys:', shippingAddress ? Object.keys(shippingAddress) : 'undefined');
-    console.log('📋 Shipping address values:', shippingAddress);
-    console.log('💳 Backend received payment method:', paymentMethod);
-    console.log('💳 Payment method type:', typeof paymentMethod);
-    console.log('💳 Full request body:', JSON.stringify(req.body, null, 2));
+    // Processing payment request with shipping address and payment method
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -748,8 +739,8 @@ const createCheckoutSession = async (req, res) => {
       });
     }
 
-    // Create or get Stripe customer
-    let customer;
+    // Create or get Stripe customer (simplified)
+    let customer = null;
     try {
       const existingCustomers = await stripe.customers.list({
         email: req.user.email,
@@ -758,6 +749,7 @@ const createCheckoutSession = async (req, res) => {
 
       if (existingCustomers.data.length > 0) {
         customer = existingCustomers.data[0];
+        console.log('✅ Found existing Stripe customer:', customer.id);
       } else {
         customer = await stripe.customers.create({
           email: req.user.email,
@@ -766,13 +758,12 @@ const createCheckoutSession = async (req, res) => {
             userId: userId.toString()
           }
         });
+        console.log('✅ Created new Stripe customer:', customer.id);
       }
     } catch (error) {
-      console.error('Stripe customer creation error:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to create customer'
-      });
+      console.error('❌ Stripe customer creation failed:', error.message);
+      console.log('⚠️ Proceeding without Stripe customer (guest checkout)');
+      customer = null;
     }
 
     // Prepare line items for Stripe
@@ -788,11 +779,7 @@ const createCheckoutSession = async (req, res) => {
       quantity: item.quantity || 1,
     }));
 
-    // Debug: Log what will be stored in metadata
-    console.log('📋 About to store in Stripe metadata:');
-    console.log('📋 - userId:', userId.toString());
-    console.log('📋 - items:', JSON.stringify(items));
-    console.log('📋 - shippingAddress:', JSON.stringify(shippingAddress || {}));
+    // Preparing metadata for Stripe checkout session
     
     // Determine payment method types based on selected method
     let paymentMethodTypes = ['card']; // Default fallback
@@ -807,33 +794,66 @@ const createCheckoutSession = async (req, res) => {
     } else if (paymentMethod === 'cash_app') {
       paymentMethodTypes = ['card', 'us_bank_account']; // Cash App uses bank transfers
     } else {
-      // For 'card' or any other method, use automatic payment methods
-      // This will show all available payment methods based on customer's device/location
-      automaticPaymentMethods = {
-        enabled: true,
-        allow_redirects: 'never'
-      };
-      paymentMethodTypes = ['card']; // Still include card as fallback
+      // For 'card' or any other method, just use card
+      paymentMethodTypes = ['card'];
     }
 
-    console.log('💳 Selected payment method:', paymentMethod);
-    console.log('💳 Payment method types:', paymentMethodTypes);
-    console.log('💳 Automatic payment methods:', automaticPaymentMethods);
+    // Payment method configuration complete
+
+    // Optimize metadata to stay within Stripe's 500-character limit
+    const optimizedItems = items.map(item => ({
+      product: item.product,
+      quantity: item.quantity,
+      price: item.price,
+      name: item.name
+      // Remove image URL to save space
+    }));
+
+    const optimizedShippingAddress = {
+      fullname: shippingAddress?.fullname || '',
+      city: shippingAddress?.city || '',
+      state: shippingAddress?.state || '',
+      pincode: shippingAddress?.pincode || ''
+      // Remove other fields to save space
+    };
+
+    // Validate metadata size to ensure it's under 500 characters
+    const metadata = {
+      userId: userId.toString(),
+      paymentMethod: paymentMethod || 'card',
+      items: JSON.stringify(optimizedItems),
+      shippingAddress: JSON.stringify(optimizedShippingAddress)
+    };
+
+    // Check if any metadata value exceeds 500 characters
+    for (const [key, value] of Object.entries(metadata)) {
+      if (value.length > 500) {
+        console.warn(`⚠️ Metadata ${key} is ${value.length} characters, truncating...`);
+        if (key === 'items') {
+          // For items, keep only essential data
+          const minimalItems = optimizedItems.map(item => ({
+            p: item.product,
+            q: item.quantity,
+            pr: item.price
+          }));
+          metadata[key] = JSON.stringify(minimalItems);
+        } else {
+          // Truncate other fields
+          metadata[key] = value.substring(0, 497) + '...';
+        }
+      }
+    }
+
+    // Metadata optimization complete
 
     // Create checkout session configuration
     const sessionConfig = {
-      customer: customer.id,
       payment_method_types: paymentMethodTypes,
       line_items: lineItems,
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: {
-        userId: userId.toString(),
-        paymentMethod: paymentMethod || 'card',
-        items: JSON.stringify(items),
-        shippingAddress: JSON.stringify(shippingAddress || {})
-      },
+      metadata,
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
       shipping_address_collection: {
@@ -841,15 +861,29 @@ const createCheckoutSession = async (req, res) => {
       },
     };
 
-    // Add automatic payment methods if enabled
-    if (automaticPaymentMethods) {
-      sessionConfig.automatic_payment_methods = automaticPaymentMethods;
+    // Only add customer if we successfully created/found one
+    if (customer && customer.id) {
+      sessionConfig.customer = customer.id;
+      console.log('✅ Using Stripe customer for checkout session:', customer.id);
+    } else {
+      console.log('⚠️ Proceeding without Stripe customer (guest checkout)');
     }
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create(sessionConfig);
 
+    // Create checkout session with timeout handling
+    let session;
+    try {
+      session = await Promise.race([
+        stripe.checkout.sessions.create(sessionConfig),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Stripe API timeout after 30 seconds')), 30000)
+        )
+      ]);
     console.log('✅ Checkout session created:', session.id);
+    } catch (timeoutError) {
+      console.error('❌ Stripe checkout session creation timed out:', timeoutError.message);
+      throw new Error('Payment service is temporarily unavailable. Please try again in a few moments.');
+    }
 
     res.json({
       success: true,
@@ -861,6 +895,20 @@ const createCheckoutSession = async (req, res) => {
 
   } catch (error) {
     console.error('Create checkout session error:', error);
+    
+    // If Stripe is completely down, offer a fallback option
+    if (error.message.includes('timeout') || error.message.includes('unavailable')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Payment service is temporarily unavailable. Please try again later or contact support.',
+        error: 'SERVICE_UNAVAILABLE',
+        fallback: {
+          message: 'You can still place your order and we will contact you for payment details.',
+          action: 'create_local_order'
+        }
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Failed to create checkout session',
@@ -924,7 +972,7 @@ const createOrderFromSession = async (req, res) => {
       });
     }
 
-    // Prepare shipping address
+    // Use user's stored shipping address
     let shippingAddress = {
       firstName: 'N/A',
       lastName: 'N/A',
@@ -936,24 +984,19 @@ const createOrderFromSession = async (req, res) => {
       phone: 'N/A'
     };
 
-    // Use address from metadata if available
-    if (metadata.shippingAddress && metadata.shippingAddress !== '{}') {
-      try {
-        const parsedAddress = JSON.parse(metadata.shippingAddress);
-        const fullAddress = [parsedAddress.flat, parsedAddress.area].filter(Boolean).join(', ');
-        shippingAddress = {
-          firstName: parsedAddress.fullname?.split(' ')[0] || 'N/A',
-          lastName: parsedAddress.fullname?.split(' ').slice(1).join(' ') || 'N/A',
-          address: fullAddress || 'N/A',
-          city: parsedAddress.city || 'N/A',
-          state: parsedAddress.state || 'N/A',
-          zipCode: parsedAddress.pincode || 'N/A',
-          country: 'US',
-          phone: parsedAddress.mobile || 'N/A'
-        };
-      } catch (parseError) {
-        console.error('Error parsing shipping address:', parseError);
-      }
+    // Use user's stored address if available
+    if (user.shippingAddress && user.shippingAddress.fullname) {
+      const fullAddress = [user.shippingAddress.flat, user.shippingAddress.area].filter(Boolean).join(', ');
+      shippingAddress = {
+        firstName: user.shippingAddress.fullname?.split(' ')[0] || 'N/A',
+        lastName: user.shippingAddress.fullname?.split(' ').slice(1).join(' ') || 'N/A',
+        address: fullAddress || 'N/A',
+        city: user.shippingAddress.city || 'N/A',
+        state: user.shippingAddress.state || 'N/A',
+        zipCode: user.shippingAddress.pincode || 'N/A',
+        country: 'US',
+        phone: user.shippingAddress.mobile || 'N/A'
+      };
     }
 
     // Create order
@@ -973,6 +1016,19 @@ const createOrderFromSession = async (req, res) => {
     await order.save();
 
     console.log('✅ Order created from session (fallback):', order._id);
+
+    // Send order confirmation email
+    try {
+      const emailResult = await emailService.sendOrderConfirmationEmail(order, user);
+      if (emailResult.success) {
+        console.log('✅ Order confirmation email sent:', emailResult.messageId);
+      } else {
+        console.log('⚠️ Failed to send order confirmation email:', emailResult.error);
+      }
+    } catch (emailError) {
+      console.error('❌ Email service error:', emailError);
+      // Don't fail the order creation if email fails
+    }
 
     res.json({
       success: true,

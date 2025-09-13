@@ -36,7 +36,7 @@ const Footer = () => {
               <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mr-4">
                 <HiOutlineShoppingBag className="text-black text-xl" />
               </div>
-              <h3 className="text-3xl font-light text-white tracking-wide">ShirlyBlack</h3>
+              <h3 className="text-3xl font-light text-white tracking-wide">Luméra</h3>
             </div>
             <p className="text-gray-300 mb-8 leading-relaxed text-base max-w-md">
               Your premier destination for quality products and exceptional shopping experience. 
@@ -47,7 +47,7 @@ const Footer = () => {
             <div className="space-y-4">
               <div className="flex items-center text-gray-300">
                 <AiOutlineMail className="w-5 h-5 mr-4 text-white" />
-                <span className="text-sm font-medium">support@shirlyblack.com</span>
+                <span className="text-sm font-medium">support@lumera.com</span>
               </div>
               <div className="flex items-center text-gray-300">
                 <AiOutlinePhone className="w-5 h-5 mr-4 text-white" />
@@ -221,7 +221,7 @@ const Footer = () => {
               <h5 className="text-sm font-semibold text-white uppercase tracking-wider mb-3">Follow Us</h5>
               <div className="flex space-x-3">
                 <a
-                  href="https://www.instagram.com/shirlyblack"
+                  href="https://www.instagram.com/lumera"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200"
@@ -229,7 +229,7 @@ const Footer = () => {
                   <AiOutlineInstagram className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://www.facebook.com/shirlyblack"
+                  href="https://www.facebook.com/lumera"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200"
@@ -237,7 +237,7 @@ const Footer = () => {
                   <AiOutlineFacebook className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://twitter.com/shirlyblack"
+                  href="https://twitter.com/lumera"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200"
@@ -245,7 +245,7 @@ const Footer = () => {
                   <AiOutlineTwitter className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://www.youtube.com/shirlyblack"
+                  href="https://www.youtube.com/lumera"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200"
@@ -266,7 +266,7 @@ const Footer = () => {
             {/* Copyright */}
             <div className="text-center md:text-left">
               <p className="text-gray-400 text-xs">
-                © {currentYear} ShirlyBlack. All rights reserved.
+                © {currentYear} Luméra. All rights reserved.
               </p>
             </div>
 

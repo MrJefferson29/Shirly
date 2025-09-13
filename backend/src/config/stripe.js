@@ -1,4 +1,8 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY, {
+  timeout: 30000, // 30 seconds timeout (reduced from 60s)
+  maxNetworkRetries: 2, // Retry failed requests up to 2 times (reduced from 3)
+  apiVersion: '2024-06-20' // Use a more recent API version
+});
 
 // Configure Stripe with supported payment methods
 const stripeConfig = {
@@ -11,11 +15,6 @@ const stripeConfig = {
     'us_bank_account' // US Bank transfers (for Cash App compatibility)
   ],
   
-  // Enable automatic payment methods
-  automatic_payment_methods: {
-    enabled: true,
-    allow_redirects: 'never'
-  },
   
   // Currency and locale
   currency: 'usd', // US Dollars

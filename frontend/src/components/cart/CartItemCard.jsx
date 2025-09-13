@@ -8,7 +8,7 @@ import {
 } from "../../contexts";
 import { useNavigate } from "react-router";
 
-const CartItemCard = ({ product, isSearch, setSearch }) => {
+const CartItemCard = ({ product, isSearch, setSearch, onSearchClick }) => {
   const navigate = useNavigate();
   const { isInWish } = useProductsContext();
   const { updateProductQtyInCart, deleteProductFromCart, disableCart } =
@@ -33,6 +33,10 @@ const CartItemCard = ({ product, isSearch, setSearch }) => {
       }`}
       onClick={() => {
         if (isSearch) {
+          // Track search analytics when user clicks on suggested item
+          if (onSearchClick) {
+            onSearchClick();
+          }
           setSearch("");
           navigate(`product/${product._id}`);
         }
