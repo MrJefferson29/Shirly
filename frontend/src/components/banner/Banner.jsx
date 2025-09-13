@@ -1,5 +1,5 @@
 import { BsArrowDownRightCircle } from "react-icons/bs";
-import bannerImg from "../../assets/bannerImg.png";
+import bannerImg from "../../assets/belly.jpg";
 import { useNavigate } from "react-router";
 
 const Banner = () => {
@@ -9,12 +9,12 @@ const Banner = () => {
     <main className="flex justify-between items-center py-1 mb-5 relative px-4 sm:px-6 lg:px-8">
       <section className="max-w-xl mx-auto sm:mx-0 w-full py-2 lg:w-1/3">
         <h1 className="text-6xl sm:text-7xl lg:text-8xl font-semibold py-3 w-full">
-          Glasses & Lens
+          Luméra & More
         </h1>
         <p className="py-3 text-md text-gray-600">
-          Buy the best high-quality sunglasses from us.
+          Get the best quality products from us.
           <br />
-          More than 100 types of assortment.
+          More than 100 types of products.
         </p>
         <section className="flex items-center">
           <button
