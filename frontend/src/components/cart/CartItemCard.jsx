@@ -28,7 +28,7 @@ const CartItemCard = ({ product, isSearch, setSearch, onSearchClick }) => {
   const inWish = isInWish(product._id);
   return (
     <div
-      className={`m-auto flex flex-col gap-2  p-4 rounded-sm shadow-sm bg-white/[0.6] mb-2 max-w-xl ${
+      className={`w-full flex flex-col gap-2 p-3 sm:p-4 rounded-sm shadow-sm bg-white/[0.6] mb-2 ${
         isSearch ? "cursor-pointer hover:bg-black/5" : ""
       }`}
       onClick={() => {
@@ -42,7 +42,7 @@ const CartItemCard = ({ product, isSearch, setSearch, onSearchClick }) => {
         }
       }}
     >
-      <div className="flex items-center gap-4 w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full">
         <div className="flex-shrink-0">
           <div
             className={`bg-white border border-gray-200 ${
@@ -56,14 +56,14 @@ const CartItemCard = ({ product, isSearch, setSearch, onSearchClick }) => {
             />
           </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-semibold text-gray-900 truncate">{product.name}</h2>
+        <div className="flex-1 min-w-0 w-full sm:w-auto">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{product.name}</h2>
 
             {!isSearch && (
               <div className="mt-3 space-y-3">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                   <span className="text-sm text-gray-600">Quantity:</span>
-                  <div className="flex items-center border border-gray-200 rounded-lg">
+                  <div className="flex items-center border border-gray-200 rounded-lg w-fit">
                     <button
                       className="p-2 text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={disableCart}
@@ -83,16 +83,16 @@ const CartItemCard = ({ product, isSearch, setSearch, onSearchClick }) => {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                   <button
-                    className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors w-fit"
                     disabled={disableCart}
                     onClick={() => deleteProductFromCart(product._id)}
                   >
                     Remove
                   </button>
                   <button
-                    className="p-2 text-gray-400 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                    className="p-2 text-gray-400 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors w-fit"
                     disabled={disableWish}
                     onClick={() => {
                       if (inWish) {
@@ -112,7 +112,7 @@ const CartItemCard = ({ product, isSearch, setSearch, onSearchClick }) => {
               </div>
             )}
         </div>
-        <div className="flex flex-col items-end">
+        <div className="flex flex-col items-start sm:items-end w-full sm:w-auto">
           <span className="text-lg font-semibold text-gray-900">${product.newPrice}</span>
           {product.newPrice && product.newPrice < product.price && (
             <span className="text-sm line-through text-gray-500">

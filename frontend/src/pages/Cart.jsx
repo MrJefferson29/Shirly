@@ -10,18 +10,20 @@ const Cart = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="py-2 ">
+    <div className="py-2 px-4 sm:px-6 lg:px-8">
       {cart.length > 0 && (
-        <h1 className="text-2xl font-bold p-3 ">Bag({cart.length})</h1>
+        <h1 className="text-2xl font-bold p-3">Bag({cart.length})</h1>
       )}
       {cart.length ? (
-        <div className="md:grid md:grid-cols-3 gap-5">
-          <main className="md:col-span-2">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-5">
+          <main className="lg:col-span-2 space-y-4">
             {cart.map((product) => (
               <CartItemCard key={product._id} product={product} />
             ))}
           </main>
-          <CartTotalCard cart={cart} />
+          <div className="lg:col-span-1">
+            <CartTotalCard cart={cart} />
+          </div>
         </div>
       ) : (
         <div className="h-[60vh] w-full flex flex-col items-center justify-center  gap-3 ">

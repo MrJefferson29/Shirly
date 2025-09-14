@@ -596,10 +596,47 @@ const AdminProducts = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                     >
                       <option value="">Select Category</option>
-                      <option value="sunglasses">Sunglasses</option>
+                      <option value="accessories">Accessories</option>
+                      <option value="automotive">Automotive</option>
+                      <option value="baby-care">Baby Care</option>
+                      <option value="bath-body">Bath & Body</option>
+                      <option value="books">Books</option>
+                      <option value="clothing">Clothing</option>
+                      <option value="cosmetics">Cosmetics</option>
+                      <option value="dental-care">Dental Care</option>
+                      <option value="electronics">Electronics</option>
                       <option value="eyeglasses">Eyeglasses</option>
+                      <option value="fitness">Fitness</option>
+                      <option value="food-beverages">Food & Beverages</option>
+                      <option value="fragrance">Fragrance</option>
+                      <option value="hair-care">Hair Care</option>
+                      <option value="healthcare">Healthcare</option>
+                      <option value="home-garden">Home & Garden</option>
+                      <option value="hygiene">Hygiene</option>
+                      <option value="jewelry">Jewelry</option>
+                      <option value="kitchen">Kitchen</option>
+                      <option value="laundry">Laundry</option>
+                      <option value="makeup">Makeup</option>
+                      <option value="medical">Medical</option>
+                      <option value="mens-grooming">Men's Grooming</option>
+                      <option value="nutrition">Nutrition</option>
+                      <option value="oral-care">Oral Care</option>
+                      <option value="personal-care">Personal Care</option>
+                      <option value="pet-care">Pet Care</option>
+                      <option value="pharmaceuticals">Pharmaceuticals</option>
+                      <option value="shoes">Shoes</option>
+                      <option value="skin-care">Skin Care</option>
+                      <option value="soap">Soap</option>
                       <option value="sports">Sports</option>
+                      <option value="sunglasses">Sunglasses</option>
+                      <option value="supplements">Supplements</option>
+                      <option value="tools">Tools</option>
+                      <option value="toys">Toys</option>
+                      <option value="travel">Travel</option>
                       <option value="vision">Vision</option>
+                      <option value="vitamins">Vitamins</option>
+                      <option value="wellness">Wellness</option>
+                      <option value="womens-care">Women's Care</option>
                     </select>
                   </div>
                   <div>

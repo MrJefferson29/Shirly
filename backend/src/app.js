@@ -13,7 +13,12 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: [
+      process.env.FRONTEND_URL || "http://localhost:3000",
+      "http://localhost:3000",
+      "https://shirly-kappa.vercel.app",
+      "https://shirly-nokb4yp65-jeffersons-projects-89b473ba.vercel.app"
+    ],
     methods: ["GET", "POST"]
   }
 });

@@ -119,7 +119,7 @@ const ProductListing = () => {
                   case 'new': return 'New Arrivals';
                   case 'sale': return 'Sale Items';
                   case 'trending': return 'Trending Now';
-                  default: return 'Glasses for You!';
+                  default: return 'Products for You!';
                 }
               })()}
             </h1>
